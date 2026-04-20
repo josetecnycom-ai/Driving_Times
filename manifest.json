@@ -1,0 +1,16 @@
+{
+  "name": "Tiempos de Conducción",
+  "version": "1.0.0",
+  "description": "Visualización del estado del tacógrafo europeo y tiempos de conducción en Geotab Drive.",
+  "supportEmail": "support@example.com",
+  "items": [{
+    "url": "index.html",
+    "path": "DriveAppData",
+    "menuName": {
+      "en": "Driving Times (Tacho)",
+      "es": "Tiempos Tacógrafo"
+    },
+    "icon": "https://raw.githubusercontent.com/Geotab/mygeotab-addins/master/src/app/images/icon.svg"
+  }],
+  "isDriveAddin": true
+}

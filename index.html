@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tiempos de Conducción</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="loading" class="loading-overlay">
+        <div class="spinner"></div>
+        <p>Cargando datos del tacógrafo...</p>
+    </div>
+
+    <div id="errorView" class="error-view" style="display: none;">
+        <div class="error-icon">⚠️</div>
+        <h2 id="errorTitle">Oops...</h2>
+        <p id="errorMessage">No se pudo cargar la información, reintenta más tarde.</p>
+        <button onclick="checkTachographStatus()">Reintentar</button>
+    </div>
+
+    <div id="dashboard" class="dashboard" style="display: none;">
+        <!-- Header: Conductor y Vehículo -->
+        <header class="header-card glass">
+            <div class="driver-info">
+                <div class="avatar">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                    </svg>
+                </div>
+                <div class="details">
+                    <h2 id="driverName">Conductor</h2>
+                    <p id="vehicleName" class="vehicle-pill">
+                        <span class="icon">
+                            <svg viewBox="0 0 16 16" fill="currentColor" style="width:1.2em; height:1.2em; vertical-align: middle; margin-right: 4px;">
+                                <path fill-rule="evenodd" d="M4.333 1.333c0-.368.299-.666.667-.666h8c.368 0 .667.298.667.666v7.334a.667.667 0 01-.667.666h-.69a2.334 2.334 0 01-4.62 0H6.31a2.334 2.334 0 01-4.62 0H1a.667.667 0 01-.667-.666v-4c0-.132.04-.26.112-.37l1.334-2A.667.667 0 012.333 2h2v-.667Zm0 2H2.69L1.667 4.87V8h.224a2.334 2.334 0 012.442-1.31V3.333Zm1.3 4c.195.192.357.417.476.667h1.782a2.334 2.334 0 014.218 0h.225V2H5.667v5.333h-.034ZM4 8a1 1 0 100 2 1 1 0 000-2Zm6 0a1 1 0 100 2 1 1 0 000-2Z" clip-rule="evenodd"></path>
+                            </svg>
+                        </span> Sin vehículo
+                    </p>
+                </div>
+            </div>
+            <div class="status-badge" id="currentActivityBadge">DESCONOCIDO</div>
+        </header>
+
+        <!-- Fila de disponibles — Normativa Art. 6 y 8 del Reglamento CE 561/2006 -->
+        <div class="availability-row">
+            <!-- Jornadas ampliadas: hasta 10h, máx. 2 veces entre descansos semanales (Art. 6.1) -->
+            <div class="avail-pill" id="pillExtended">
+                <span class="avail-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 100 100">
+                        <rect width="100" height="100" rx="8" fill="#468847"/>
+                        <g fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="50" cy="50" r="32"/>
+                            <circle cx="50" cy="50" r="10"/>
+                            <path d="M43 57 L30 70"/>
+                            <path d="M57 57 L70 70"/>
+                        </g>
+                    </svg>
+                </span>
+                <div class="avail-body">
+                    <span class="avail-label">Jornadas 10h</span>
+                    <strong id="extendedDaysLeft">2</strong>
+                </div>
+                <span class="avail-sub">disponibles</span>
+            </div>
+
+            <!-- Descansos reducidos: mínimo 9h, máx. 3 veces entre descansos semanales (Art. 8.4) -->
+            <div class="avail-pill" id="pillReducedRest">
+                <span class="avail-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 100 100">
+                        <g fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="square" stroke-linejoin="miter">
+                            <path d="M35 30 V80" />
+                            <path d="M35 55 H75 V80" />
+                        </g>
+                    </svg>
+                </span>
+                <div class="avail-body">
+                    <span class="avail-label">Descansos 9h</span>
+                    <strong id="reducedRestsLeft">3</strong>
+                </div>
+                <span class="avail-sub">disponibles</span>
+            </div>
+
+            <!-- Compensación semanal pendiente (Art. 8.6) — solo visible si aplica -->
+            <div class="avail-pill pill-alert" id="pillCompensation" style="display:none;">
+                <span class="avail-icon">⚠️</span>
+                <div class="avail-body">
+                    <span class="avail-label">Compensar</span>
+                    <strong id="compensationAmt">–</strong>
+                </div>
+                <span class="avail-sub" id="compensationDeadline">pendiente</span>
+            </div>
+        </div>
+
+        <section class="grid-layout">
+            <!-- Conducción Continua -->
+            <div class="card glass">
+                <h3>Conducción Continua</h3>
+                <div class="metric-big">
+                    <span id="continuousDrivingTxt">0h 0m</span>
+                    <span class="limit">/ 4h 30m</span>
+                </div>
+                <div class="progress-bar">
+                    <div id="continuousBar" class="progress fill-green" style="width: 0%;"></div>
+                </div>
+                <p class="subtext">Pausa obligatoria de 45 min al alcanzar el límite</p>
+            </div>
+
+            <!-- Conducción Diaria -->
+            <div class="card glass">
+                <h3>Tiempo de Conducción Diaria</h3>
+                <div class="metric-big">
+                    <span id="dailyDrivingTxt">0h 0m</span>
+                    <span class="limit" id="dailyLimitTxt">/ 9h</span>
+                </div>
+                <div class="progress-bar">
+                    <div id="dailyBar" class="progress fill-green" style="width: 0%;"></div>
+                </div>
+                <div class="info-row">
+                    <span>Inicio jornada:</span>
+                    <strong id="startShiftTxt">--:--</strong>
+                </div>
+                <div class="info-row" style="margin-top:6px;">
+                    <span id="extendedDayTag" class="tag-ext"></span>
+                </div>
+            </div>
+
+            <!-- Descanso Diario -->
+            <div class="card glass">
+                <h3>Descanso del Día</h3>
+                <div class="metric-big">
+                    <span id="restAccumulatedTxt">0h 0m</span>
+                    <span class="limit" id="restRequiredTxt">/ 11h</span>
+                </div>
+                <div class="progress-bar">
+                    <div id="restBar" class="progress fill-blue" style="width: 0%;"></div>
+                </div>
+                <div class="info-row" id="deadlineRow">
+                    <span>Límite 24h para terminar descanso:</span>
+                    <strong id="dailyRestDeadlineTxt">--:--</strong>
+                </div>
+                <div class="info-row" style="margin-top:6px;">
+                    <span id="restTypeTag" class="tag-ext"></span>
+                </div>
+            </div>
+
+            <!-- Semanal & Bisemanal -->
+            <div class="card glass span-full">
+                <h3>Acumulados</h3>
+                <div class="acumulados-grid">
+                    <div class="acumulado-item">
+                        <span class="label">Esta Semana <em>(Máx 56h)</em></span>
+                        <div class="val-bar-wrapper">
+                            <strong id="weeklyTxt">0h 0m</strong>
+                            <div class="progress-bar thin">
+                                <div id="weeklyBar" class="progress fill-yellow" style="width: 0%;"></div>
+                            </div>
+                            <span id="weeklyAvail" class="avail-inline">–</span>
+                        </div>
+                    </div>
+                    <div class="acumulado-item">
+                        <span class="label">Bisemanal <em>(Máx 90h)</em></span>
+                        <div class="val-bar-wrapper">
+                            <strong id="biweeklyTxt">0h 0m</strong>
+                            <div class="progress-bar thin">
+                                <div id="biweeklyBar" class="progress fill-orange" style="width: 0%;"></div>
+                            </div>
+                            <span id="biweeklyAvail" class="avail-inline">–</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- SDK Geotab API Script simulation handles logic locally inside Drive App -->
+    <script src="js/main.js"></script>
+</body>
+</html>
