@@ -4,13 +4,13 @@
   "description": "Visualización del estado del tacógrafo europeo y tiempos de conducción en Geotab Drive.",
   "supportEmail": "support@example.com",
   "items": [{
-    "url": "index.html",
+    "url": "https://josetecnycom-ai.github.io/Driving_Times/",
     "path": "DriveAppData",
     "menuName": {
       "en": "Driving Times (Tacho)",
       "es": "Tiempos Tacógrafo"
     },
-    "icon": "https://raw.githubusercontent.com/Geotab/mygeotab-addins/master/src/app/images/icon.svg"
+    "svgIcon": "https://josetecnycom-ai.github.io/Driving_Times/icon.svg"
   }],
   "isDriveAddin": true
 }
