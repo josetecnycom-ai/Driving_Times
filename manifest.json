@@ -5,7 +5,7 @@
   "supportEmail": "support@example.com",
   "items": [{
     "url": "https://josetecnycom-ai.github.io/Driving_Times/",
-    "path": "DriveAppData",
+    "path": "DriveAppLink/",
     "menuName": {
       "en": "Driving Times (Tacho)",
       "es": "Tiempos Tacógrafo"
