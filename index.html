@@ -3,195 +3,151 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tachograph Drive Add-in v2.2.0</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Tachograph Drive v2.2.1</title>
     <style>
+        /* CSS REFORZADO - v2.2.1 */
         :root {
-            --bg-color: #f0f4f8;
+            --bg-body: #f1f5f9;
             --card-bg: #ffffff;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --accent-blue: #3b82f6;
-            --accent-green: #22c55e;
-            --accent-yellow: #eab308;
-            --accent-orange: #f97316;
-            --accent-red: #ef4444;
-            --border-radius: 16px;
-            --shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            --txt-main: #0f172a;
+            --txt-mute: #64748b;
+            --blue: #3b82f6;
+            --green: #22c55e;
+            --yellow: #eab308;
+            --red: #ef4444;
+            --orange: #f97316;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        * { margin: 0; padding: 0; box-sizing: border-box !important; }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            padding: 12px;
-            min-height: 100vh;
-            line-height: 1.4;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+            background-color: var(--bg-body) !important;
+            padding: 10px !important;
+            color: var(--txt-main) !important;
         }
 
-        .glass-card {
-            background: var(--card-bg);
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            padding: 16px;
-            margin-bottom: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.8);
+        #dashboard { display: none; width: 100% !important; }
+
+        #dashboard .glass-card {
+            background: var(--card-bg) !important;
+            border-radius: 16px !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06) !important;
+            padding: 15px !important;
+            margin-bottom: 10px !important;
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+            overflow: hidden !important;
         }
 
-        /* ── Header ─────────────────────────────────── */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        /* ── Header Simple ──────────────────────────── */
+        #dashboard .header {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+        }
+        #dashboard .vehicle-info { display: flex !important; align-items: center !important; gap: 8px !important; }
+        #dashboard .vehicle-label {
+            font-size: 13px !important; font-weight: 700 !important; color: var(--txt-mute) !important;
+            background: #f1f5f9 !important; padding: 4px 10px !important; border-radius: 20px !important;
         }
 
-        .user-block { display: flex; align-items: center; gap: 12px; }
-        .avatar {
-            width: 48px; height: 48px;
-            background: #cbd5e1; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            color: white; flex-shrink: 0;
+        #dashboard .status-badge {
+            padding: 5px 12px !important; border-radius: 8px !important;
+            font-weight: 800 !important; font-size: 11px !important;
+            text-transform: uppercase !important;
+        }
+        #dashboard .status-badge.driving { background: #dbeafe !important; color: #1d4ed8 !important; }
+        #dashboard .status-badge.rest    { background: #dcfce7 !important; color: #15803d !important; }
+        #dashboard .status-badge.work    { background: #fef9c3 !important; color: #854d0e !important; }
+
+        /* ── Pills Row ──────────────────────────────── */
+        #dashboard .availability-row {
+            display: grid !important;
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 8px !important;
+            margin-bottom: 10px !important;
         }
 
-        .user-info h2 { font-size: 18px; font-weight: 700; color: #0f172a; }
-        .vehicle-pill {
-            font-size: 11px; color: var(--text-muted);
-            background: #f1f5f9; padding: 2px 8px;
-            border-radius: 12px; display: flex; align-items: center; gap: 4px;
-            margin-top: 2px; font-weight: 600;
+        #dashboard .avail-pill {
+            background: white !important; border-radius: 14px !important;
+            padding: 10px !important; box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;
+            display: flex !important; flex-direction: column !important;
+            border-left: 5px solid #cbd5e1 !important;
         }
+        #dashboard .avail-pill h4 { font-size: 10px !important; color: var(--txt-mute) !important; text-transform: uppercase !important; margin-bottom: 2px !important; }
+        #dashboard .avail-pill .val { font-size: 22px !important; font-weight: 900 !important; margin: 0 !important; }
+        #dashboard .avail-pill .sub { font-size: 10px !important; color: var(--txt-mute) !important; }
 
-        .status-badge {
-            padding: 6px 12px; border-radius: 8px;
-            font-weight: 700; font-size: 11px;
-            text-transform: uppercase; letter-spacing: 0.02em;
+        #dashboard .pill-jornada { border-left-color: var(--green) !important; }
+        #dashboard .pill-descanso { border-left-color: var(--yellow) !important; }
+        #dashboard .pill-compensar { border-left-color: var(--red) !important; background: #fff5f5 !important; }
+        #dashboard .pill-compensar .val { color: var(--red) !important; }
+
+        /* ── Main Cards ─────────────────────────────── */
+        #dashboard h3 { font-size: 12px !important; color: var(--txt-mute) !important; text-transform: uppercase !important; margin-bottom: 8px !important; letter-spacing: 0.05em !important; }
+        
+        #dashboard .metric { display: flex !important; align-items: baseline !important; gap: 5px !important; margin-bottom: 6px !important; }
+        #dashboard .main-val { font-size: 30px !important; font-weight: 900 !important; color: var(--txt-main) !important; }
+        #dashboard .limit-val { font-size: 15px !important; color: var(--txt-mute) !important; font-weight: 500 !important; }
+
+        #dashboard .progress-container { width: 100% !important; height: 12px !important; background: #e2e8f0 !important; border-radius: 6px !important; overflow: hidden !important; margin-bottom: 10px !important; }
+        #dashboard .progress-bar { height: 100% !important; border-radius: 6px !important; transition: width 0.5s ease-out !important; }
+        
+        #dashboard .bg-green  { background: #22c55e !important; }
+        #dashboard .bg-yellow { background: #eab308 !important; }
+        #dashboard .bg-red    { background: #ef4444 !important; }
+        #dashboard .bg-orange { background: #f97316 !important; }
+
+        #dashboard .footer-info { display: flex !important; justify-content: space-between !important; font-size: 13px !important; color: var(--txt-mute) !important; align-items: center !important; }
+        #dashboard .footer-info strong { color: var(--txt-main) !important; font-weight: 800 !important; }
+        #dashboard .danger-msg { color: var(--red) !important; font-weight: 800 !important; }
+
+        #dashboard .tag {
+            font-size: 11px !important; font-weight: 700 !important;
+            padding: 4px 10px !important; border-radius: 6px !important;
+            display: inline-flex !important; align-items: center !important; gap: 4px !important; margin-top: 8px !important;
         }
-        .status-badge.driving { background: #dbeafe; color: #1d4ed8; }
-        .status-badge.rest    { background: #dcfce7; color: #15803d; }
-        .status-badge.work    { background: #fef9c3; color: #854d0e; }
-
-        /* ── Availability Row ────────────────────────── */
-        .availability-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 8px;
-            margin-bottom: 12px;
-        }
-
-        .avail-pill {
-            background: white; border-radius: 12px;
-            padding: 10px; box-shadow: var(--shadow);
-            display: flex; flex-direction: column;
-            border-left: 4px solid #cbd5e1;
-            position: relative;
-        }
-        .avail-pill h4 { font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; }
-        .avail-pill .val { font-size: 22px; font-weight: 800; line-height: 1.1; margin: 2px 0; }
-        .avail-pill .sub { font-size: 9px; color: var(--text-muted); font-weight: 500; }
-
-        .pill-jornada { border-left-color: var(--accent-green); }
-        .pill-descanso { border-left-color: var(--accent-yellow); }
-        .pill-compensar { border-left-color: var(--accent-red); background: #fff5f5; }
-        .pill-compensar .val, .pill-compensar h4 { color: var(--accent-red); }
-
-        .warn-icon { position: absolute; top: 10px; right: 8px; color: var(--accent-red); font-size: 14px; }
-
-        /* ── Cards ──────────────────────────────────── */
-        .card h3 {
-            font-size: 12px; color: var(--text-muted);
-            text-transform: uppercase; font-weight: 700;
-            letter-spacing: 0.05em; margin-bottom: 10px;
-        }
-
-        .metric { display: flex; align-items: baseline; gap: 6px; margin-bottom: 8px; }
-        .metric .main-val { font-size: 32px; font-weight: 800; color: #0f172a; }
-        .metric .limit-val { font-size: 15px; font-weight: 500; color: var(--text-muted); }
-
-        .progress-container {
-            width: 100%; height: 10px;
-            background: #f1f5f9; border-radius: 5px;
-            overflow: hidden; margin-bottom: 10px;
-        }
-        .progress-bar {
-            height: 100%; border-radius: 5px;
-            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .bg-green { background: #22c55e; }
-        .bg-yellow { background: #eab308; }
-        .bg-red { background: #ef4444; }
-        .bg-orange { background: #f97316; }
-
-        .footer-info { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-muted); }
-        .footer-info strong { color: var(--text-main); font-weight: 700; }
-        .danger-msg { color: var(--accent-red); font-weight: 700; }
-
-        .tag {
-            font-size: 11px; font-weight: 600;
-            padding: 4px 10px; border-radius: 6px;
-            display: inline-flex; align-items: center; gap: 4px;
-            margin-top: 8px;
-        }
-        .tag-blue { background: #eff6ff; color: #1d4ed8; }
-        .tag-green { background: #f0fdf4; color: #15803d; }
+        #dashboard .tag-blue { background: #eff6ff !important; color: #1d4ed8 !important; border: 1px solid #dbeafe !important; }
+        #dashboard .tag-green { background: #f0fdf4 !important; color: #15803d !important; border: 1px solid #dcfce7 !important; }
 
         /* ── Acumulados ──────────────────────────────── */
-        .acumulado-item { margin-bottom: 12px; }
-        .acumulado-item:last-child { margin-bottom: 0; }
-        .acumulado-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 4px; }
-        .acumulado-title { font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; }
-        .acumulado-title span { opacity: 0.6; font-weight: 500; }
-        .acumulado-data { display: flex; align-items: center; gap: 10px; }
-        .acumulado-data .val { font-size: 18px; font-weight: 800; min-width: 75px; }
-        .acumulado-data .disp { font-size: 11px; color: var(--text-muted); font-weight: 600; white-space: nowrap; }
+        #dashboard .acumulado-item { margin-bottom: 12px !important; }
+        #dashboard .acumulado-header { display: flex !important; justify-content: space-between !important; margin-bottom: 4px !important; align-items: center !important; }
+        #dashboard .acumulado-title { font-size: 11px !important; color: var(--txt-mute) !important; font-weight: 700 !important; text-transform: uppercase !important; }
+        #dashboard .acumulado-data { display: flex !important; align-items: center !important; gap: 10px !important; }
+        #dashboard .acumulado-data .val { font-size: 17px !important; font-weight: 900 !important; min-width: 70px !important; }
+        #dashboard .acumulado-data .disp { font-size: 11px !important; color: var(--txt-mute) !important; font-weight: 700 !important; text-align: right !important; }
 
         /* ── States ─────────────────────────────────── */
-        #loading { position: fixed; inset: 0; background: var(--bg-color); z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 15px; }
-        .spinner { width: 40px; height: 40px; border: 4px solid #cbd5e1; border-top-color: var(--accent-blue); border-radius: 50%; animation: spin 1s linear infinite; }
+        #loading { position: fixed; inset: 0; background: var(--bg-body); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #cbd5e1; border-top-color: var(--blue); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        
-        #errorView { display: none; text-align: center; padding: 40px 20px; }
-        #dashboard { display: none; }
+        #errorView { display: none; padding: 30px; text-align: center; }
     </style>
 </head>
 <body>
 
-    <!-- Loading Screen -->
     <div id="loading">
         <div class="spinner"></div>
-        <p style="font-weight: 600; color: var(--text-muted);">Cargando Tacógrafo...</p>
+        <p style="margin-top:15px; font-weight:700; color:#64748b;">Conectando...</p>
     </div>
 
-    <!-- Error View -->
     <div id="errorView" class="glass-card">
-        <div style="font-size: 48px; margin-bottom: 10px;">⚠️</div>
-        <h2 id="errorMessage">Error de conexión</h2>
-        <button onclick="location.reload()" style="margin-top:20px; padding: 10px 20px; background: var(--accent-blue); color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">Reintentar</button>
+        <h2 id="errorMessage">Error</h2>
+        <button onclick="location.reload()" style="margin-top:20px; padding:10px 20px; border-radius:8px; border:none; background:var(--blue); color:white; font-weight:700;">Reintentar</button>
     </div>
 
-    <!-- Main Dashboard -->
     <div id="dashboard">
-        <!-- Header -->
+        <!-- Header: Solo vehículo y estado -->
         <div class="glass-card header">
-            <div class="user-block">
-                <div class="avatar">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                </div>
-                <div class="user-info">
-                    <h2 id="driverName">Cargando...</h2>
-                    <div class="vehicle-pill">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42.99L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"></path></svg>
-                        <span id="vehicleName">----</span>
-                    </div>
-                </div>
+            <div class="vehicle-info">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="#64748b"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42.99L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"></path></svg>
+                <div class="vehicle-label" id="vehicleName">----</div>
             </div>
             <div id="currentActivityBadge" class="status-badge">---</div>
         </div>
 
-        <!-- Availability Row -->
+        <!-- Pills Row -->
         <div class="availability-row">
             <div class="avail-pill pill-jornada">
                 <h4>Jornadas 10h</h4>
@@ -204,15 +160,14 @@
                 <div class="sub">disponibles</div>
             </div>
             <div class="avail-pill pill-compensar" id="cardCompensar">
-                <div class="warn-icon">⚠️</div>
                 <h4>Compensar</h4>
                 <div class="val" id="compensationAmt">0h</div>
                 <div class="sub" id="compensationDeadline">sin deudas</div>
             </div>
         </div>
 
-        <!-- Continuous Driving -->
-        <div class="glass-card card">
+        <!-- Cards -->
+        <div class="glass-card">
             <h3>Conducción Continua</h3>
             <div class="metric">
                 <span class="main-val" id="continuousDrivingTxt">0h 0m</span>
@@ -221,12 +176,11 @@
             <div class="progress-container">
                 <div id="continuousBar" class="progress-bar bg-green" style="width: 0%"></div>
             </div>
-            <p class="subtext" style="font-size: 11px; color: var(--text-muted);">Pausa obligatoria de 45 min al alcanzar el límite</p>
+            <p style="font-size:11px; color:#64748b;">Pausa obligatoria de 45 min al alcanzar el límite</p>
         </div>
 
-        <!-- Daily Driving -->
-        <div class="glass-card card">
-            <h3>Tiempo de Conducción Diaria</h3>
+        <div class="glass-card">
+            <h3>Conducción Diaria</h3>
             <div class="metric">
                 <span class="main-val" id="dailyDrivingTxt">0h 0m</span>
                 <span class="limit-val" id="dailyLimitTxt">/ 9h 0m</span>
@@ -238,14 +192,10 @@
                 <span>Inicio jornada:</span>
                 <strong id="startShiftTxt">--:--</strong>
             </div>
-            <div id="tagJornada" class="tag tag-blue" style="display: none;">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                Jornada ampliable hasta 10h
-            </div>
+            <div id="tagJornada" class="tag tag-blue" style="display:none;">✓ Jornada ampliable hasta 10h</div>
         </div>
 
-        <!-- Rest of the Day -->
-        <div class="glass-card card">
+        <div class="glass-card">
             <h3>Descanso del Día</h3>
             <div class="metric">
                 <span class="main-val" id="restAccumulatedTxt">0h 0m</span>
@@ -254,26 +204,22 @@
             <div class="progress-container">
                 <div id="restBar" class="progress-bar bg-green" style="width: 0%"></div>
             </div>
-            <div class="footer-info danger-msg" id="deadlineRow">
+            <div class="footer-info" id="deadlineRow">
                 <span>Límite 24h para terminar descanso:</span>
                 <strong id="dailyRestDeadlineTxt">--:--</strong>
             </div>
-            <div id="tagDescanso" class="tag tag-green" style="display: none;">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M3 10h18M7 15h1M11 15h1M15 15h1"></path></svg>
-                Puede usar descanso reducido (9h)
-            </div>
+            <div id="tagDescanso" class="tag tag-green" style="display:none;">↪ Puede usar descanso reducido (9h)</div>
         </div>
 
-        <!-- Accumulates -->
-        <div class="glass-card card">
+        <div class="glass-card">
             <h3>Acumulados</h3>
             <div class="acumulado-item">
                 <div class="acumulado-header">
-                    <div class="acumulado-title">Esta Semana <span>(MÁX 56h)</span></div>
+                    <div class="acumulado-title">Semanal (Máx. 56h)</div>
                 </div>
                 <div class="acumulado-data">
-                    <div class="val" id="weeklyTxt">0h 0m</div>
-                    <div class="progress-container" style="height: 6px; margin: 0;">
+                    <div class="val" id="weeklyTxt">0h</div>
+                    <div class="progress-container" style="height:8px; margin:0; flex-grow:1;">
                         <div id="weeklyBar" class="progress-bar bg-yellow" style="width: 0%"></div>
                     </div>
                     <div class="disp" id="weeklyAvail">--h disp.</div>
@@ -281,11 +227,11 @@
             </div>
             <div class="acumulado-item">
                 <div class="acumulado-header">
-                    <div class="acumulado-title">Bisemanal <span>(MÁX 90h)</span></div>
+                    <div class="acumulado-title">Bisemanal (Máx. 90h)</div>
                 </div>
                 <div class="acumulado-data">
-                    <div class="val" id="biweeklyTxt">0h 0m</div>
-                    <div class="progress-container" style="height: 6px; margin: 0;">
+                    <div class="val" id="biweeklyTxt">0h</div>
+                    <div class="progress-container" style="height:8px; margin:0; flex-grow:1;">
                         <div id="biweeklyBar" class="progress-bar bg-orange" style="width: 0%"></div>
                     </div>
                     <div class="disp" id="biweeklyAvail">--h disp.</div>
@@ -295,203 +241,163 @@
     </div>
 
     <script>
-        console.log("%c !!! TACHO CUSTOM ADDIN LOADED - v2.2.0 (Premium) !!!", "background: #1e293b; color: #f43f5e; font-size: 20px; font-weight: bold;");
+        console.log("%c !!! Tacho v2.2.1 - Blindado !!! ", "background:#1e293b; color:#10b981; font-weight:bold; font-size:18px;");
 
         var api, state, mainSession = null, cachedDriverId = null;
 
-        function log(msg, data) { console.log('[TachographAddin] ' + msg, data || ''); }
+        function log(m, d) { console.log('[Tachograph] ' + m, d || ''); }
 
-        function formatHM(sec) {
-            if (!sec || isNaN(sec)) return '0h 0m';
-            var h = Math.floor(Math.abs(sec) / 3600);
-            var m = Math.floor((Math.abs(sec) % 3600) / 60);
+        function formatHM(s) {
+            if (!s || isNaN(s)) return '0h 0m';
+            var h = Math.floor(Math.abs(s) / 3600);
+            var m = Math.floor((Math.abs(s) % 3600) / 60);
             return h + 'h ' + m + 'm';
         }
 
-        function formatRelativeTime(val) {
-            if (!val || val === 0) return '--:--';
-            var date = (typeof val === 'number') ? new Date(val * 1000) : new Date(val);
-            if (isNaN(date.getTime())) return '--:--';
+        function formatTime(v) {
+            if (!v || v === 0) return '--:--';
+            var d = (typeof v === 'number') ? new Date(v * 1000) : new Date(v);
+            if (isNaN(d.getTime())) return '--:--';
             var now = new Date();
-            var isToday = date.getDate() === now.getDate() && date.getMonth() === now.getMonth();
-            var timeStr = date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-            return (isToday ? 'Hoy ' : (date.getDate() + '/' + (date.getMonth()+1) + ' ')) + timeStr;
+            var timeStr = d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+            return (d.getDate() === now.getDate() ? 'Hoy ' : (d.getDate() + '/' + (d.getMonth()+1) + ' ')) + timeStr;
         }
 
-        function geotabDriveAddInInit(apiObj, stateObj, callback) {
-            api = apiObj;
-            state = stateObj;
-            log('Iniciando v2.2.0 (Restauración)...');
-            
+        function geotabDriveAddInInit(a, s, c) {
+            api = a; state = s;
+            log('Init v2.2.1');
             setTimeout(function() {
-                if (state.driver && state.driver.id) {
-                    cachedDriverId = state.driver.id;
-                    log('Driver ID:', cachedDriverId);
-                }
+                if (state.driver && state.driver.id) cachedDriverId = state.driver.id;
                 checkStatus();
-            }, 1500);
-
-            if (callback) callback();
+            }, 1000);
+            if (c) c();
         }
 
         function checkStatus() {
-            log('Iniciando Puente Directo...');
-            api.getSession(function(session) {
-                mainSession = session;
+            api.getSession(function(s) {
+                mainSession = s;
                 if (!mainSession.server) mainSession.server = window.location.hostname.includes('geotab.com') ? window.location.hostname : 'my.geotab.com';
                 fetchData(cachedDriverId);
             });
         }
 
-        function fetchData(driverId) {
-            log('Ejecutando Jailbreak Fetch...');
-            var rpcData = {
+        function fetchData(id) {
+            var rpc = {
                 method: "Get",
                 params: {
                     typeName: "TachographDrivingTimeStatus",
                     credentials: { database: mainSession.database, sessionId: mainSession.sessionId, userName: mainSession.userName },
-                    search: { typeName: "TachographDrivingTimeStatusSearch", userSearch: driverId ? { id: driverId } : undefined }
+                    search: { typeName: "TachographDrivingTimeStatusSearch", userSearch: id ? { id: id } : undefined }
                 }, id: 1
             };
 
             fetch('https://' + mainSession.server + '/apiv1', {
-                method: 'POST', body: JSON.stringify(rpcData), headers: { 'Content-Type': 'application/json' }
+                method: 'POST', body: JSON.stringify(rpc), headers: { 'Content-Type': 'application/json' }
             })
-            .then(res => res.json())
-            .then(data => {
-                if (data.result && data.result.length > 0) {
-                    log('Éxito! Datos recibidos.');
-                    render(data.result[0]);
-                } else {
-                    showError('No se encontraron datos de Tacógrafo.');
-                }
+            .then(r => r.json())
+            .then(d => {
+                if (d.result && d.result.length > 0) render(d.result[0]);
+                else throw new Error('No data');
             })
-            .catch(err => {
-                log('Error directo, probando SDK...', err);
+            .catch(e => {
+                log('Fetch fallido, usando SDK...', e);
                 api.call('Get', { typeName: 'TachographDrivingTimeStatus' }, function(res) {
                     if (res && res.length > 0) render(res[0]);
-                    else showError('Error de comunicación persistente.');
-                }, function(e) { showError('Falla crítica de API.'); });
+                    else showError('No hay disponibilidad.');
+                }, function(err) { showError('Falla de servidor.'); });
             });
         }
 
         function render(d) {
-            document.getElementById('loading').style.display    = 'none';
-            document.getElementById('errorView').style.display  = 'none';
-            document.getElementById('dashboard').style.display  = 'block';
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('errorView').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
 
-            if (!d) return;
+            if (state && state.device) document.getElementById('vehicleName').textContent = state.device.name || 'Vehículo';
 
-            // Datos de usuario
-            if (state && state.driver) document.getElementById('driverName').textContent = state.driver.name;
-            if (state && state.device) document.getElementById('vehicleName').textContent = state.device.name;
-
-            // Activity Badge
             var act = (d.activityStatus || 'REST').toUpperCase();
             var badge = document.getElementById('currentActivityBadge');
             badge.textContent = act;
             badge.className = 'status-badge ' + (act.includes('DRIVING') ? 'driving' : act.includes('REST') ? 'rest' : 'work');
 
-            // Pills Superiores
-            var lDayUsed = d.dailyDrivingLongDayCount || 0;
-            var extLeft = Math.max(0, 2 - lDayUsed);
-            document.getElementById('extendedDaysLeft').textContent = extLeft;
+            var eDays = Math.max(0, 2 - (d.dailyDrivingLongDayCount || 0));
+            document.getElementById('extendedDaysLeft').textContent = eDays;
             
-            var redRestUsed = d.weeklyPeriodReducedRestCount || 0;
-            var redLeft = Math.max(0, 3 - redRestUsed);
-            document.getElementById('reducedRestsLeft').textContent = redLeft;
+            var rRests = Math.max(0, 3 - (d.weeklyPeriodReducedRestCount || 0));
+            document.getElementById('reducedRestsLeft').textContent = rRests;
 
-            var pendingComp = d.pendingCompensations || 0;
-            if (pendingComp > 0) {
+            if ((d.pendingCompensations || 0) > 0) {
                 document.getElementById('cardCompensar').style.display = 'flex';
                 document.getElementById('compensationAmt').textContent = formatHM(d.nextCompensationDuration || 0);
-                document.getElementById('compensationDeadline').textContent = d.nextCompensationLimit ? 'antes del ' + new Date(d.nextCompensationLimit * 1000).toLocaleDateString() : 'Pendiente';
-            } else {
-                document.getElementById('cardCompensar').style.background = 'white';
-                document.getElementById('cardCompensar').querySelector('.warn-icon').style.display = 'none';
-                document.getElementById('cardCompensar').querySelector('h4').style.color = 'var(--text-muted)';
-                document.getElementById('compensationAmt').style.color = 'var(--text-main)';
             }
 
-            // Continua
-            var contSec = d.continuousDrivingTime || 0;
-            document.getElementById('continuousDrivingTxt').textContent = formatHM(contSec);
-            var contPct = Math.min((contSec / 16200) * 100, 100);
-            document.getElementById('continuousBar').style.width = contPct + '%';
-            document.getElementById('continuousBar').className = 'progress-bar ' + (contPct > 90 ? 'bg-red' : contPct > 80 ? 'bg-yellow' : 'bg-green');
+            var cSec = d.continuousDrivingTime || 0;
+            document.getElementById('continuousDrivingTxt').textContent = formatHM(cSec);
+            var cPct = Math.min((cSec / 16200) * 100, 100);
+            document.getElementById('continuousBar').style.width = cPct + '%';
+            document.getElementById('continuousBar').className = 'progress-bar ' + (cPct > 90 ? 'bg-red' : cPct > 80 ? 'bg-yellow' : 'bg-green');
 
-            // Diaria
-            var dailySec = d.dailyDrivingTime || 0;
-            document.getElementById('dailyDrivingTxt').textContent = formatHM(dailySec);
-            document.getElementById('dailyLimitTxt').textContent = '/ ' + formatHM(d.dailyDrivingTimeLimit || 32400);
-            document.getElementById('startShiftTxt').textContent = formatRelativeTime(d.activeDailyDrivingStart);
-            var dailyPct = Math.min((dailySec / (d.dailyDrivingTimeLimit || 32400)) * 100, 100);
-            document.getElementById('dailyBar').style.width = dailyPct + '%';
-            document.getElementById('dailyBar').className = 'progress-bar ' + (dailyPct > 90 ? 'bg-red' : dailyPct > 80 ? 'bg-yellow' : 'bg-green');
-            
-            document.getElementById('tagJornada').style.display = (extLeft > 0 && dailySec <= 32400) ? 'inline-flex' : 'none';
+            var dSec = d.dailyDrivingTime || 0;
+            var dLim = d.dailyDrivingTimeLimit || 32400;
+            document.getElementById('dailyDrivingTxt').textContent = formatHM(dSec);
+            document.getElementById('dailyLimitTxt').textContent = '/ ' + formatHM(dLim);
+            document.getElementById('startShiftTxt').textContent = formatTime(d.activeDailyDrivingStart);
+            var dPct = Math.min((dSec / dLim) * 100, 100);
+            document.getElementById('dailyBar').style.width = dPct + '%';
+            document.getElementById('dailyBar').className = 'progress-bar ' + (dPct > 90 ? 'bg-red' : dPct > 80 ? 'bg-yellow' : 'bg-green');
+            document.getElementById('tagJornada').style.display = (eDays > 0 && dSec <= 32400) ? 'inline-flex' : 'none';
 
-            // Descanso
-            var isResting = act.includes('REST');
-            var restAcc = isResting ? (d.restDuration || 0) : 0;
-            var restReq = (d.dailyDrivingRestMinType || '').includes('Reduced') ? 32400 : 39600;
-            document.getElementById('restAccumulatedTxt').textContent = formatHM(restAcc);
-            document.getElementById('restRequiredTxt').textContent = '/ ' + formatHM(restReq);
-            document.getElementById('restBar').style.width = Math.min((restAcc / restReq) * 100, 100) + '%';
+            var isR = act.includes('REST');
+            var rAcc = isR ? (d.restDuration || 0) : 0;
+            var rReq = (d.dailyDrivingRestMinType || '').includes('Reduced') ? 32400 : 39600;
+            document.getElementById('restAccumulatedTxt').textContent = formatHM(rAcc);
+            document.getElementById('restRequiredTxt').textContent = '/ ' + formatHM(rReq);
+            document.getElementById('restBar').style.width = Math.min((rAcc / rReq) * 100, 100) + '%';
             
-            var deadline = d.nextRestMaxStartTime || 0;
-            if (deadline > 0) {
-                document.getElementById('dailyRestDeadlineTxt').textContent = formatRelativeTime(deadline);
+            var dl = d.nextRestMaxStartTime || 0;
+            if (dl > 0) {
+                document.getElementById('dailyRestDeadlineTxt').textContent = formatTime(dl);
                 document.getElementById('deadlineRow').className = 'footer-info danger-msg';
             } else {
                 document.getElementById('dailyRestDeadlineTxt').textContent = 'Completado ✓';
                 document.getElementById('deadlineRow').className = 'footer-info';
-                document.getElementById('deadlineRow').style.color = 'var(--accent-green)';
+                document.getElementById('deadlineRow').style.color = '#22c55e';
             }
-            document.getElementById('tagDescanso').style.display = (redLeft > 0) ? 'inline-flex' : 'none';
+            document.getElementById('tagDescanso').style.display = (rRests > 0) ? 'inline-flex' : 'none';
 
-            // Acumulados
-            var weekSec = d.cumulatedWeeklyDrivingTime || 0;
-            document.getElementById('weeklyTxt').textContent = formatHM(weekSec);
-            document.getElementById('weeklyAvail').textContent = formatHM(Math.max(0, 201600 - weekSec)) + ' disp.';
-            document.getElementById('weeklyBar').style.width = Math.min((weekSec / 201600) * 100, 100) + '%';
+            var wSec = d.cumulatedWeeklyDrivingTime || 0;
+            document.getElementById('weeklyTxt').textContent = formatHM(wSec);
+            document.getElementById('weeklyAvail').textContent = formatHM(Math.max(0, 201600 - wSec)) + ' disp.';
+            document.getElementById('weeklyBar').style.width = Math.min((wSec / 201600) * 100, 100) + '%';
 
-            var biSec = d.cumulatedBiweeklyDrivingTime || 0;
-            document.getElementById('biweeklyTxt').textContent = formatHM(biSec);
-            document.getElementById('biweeklyAvail').textContent = formatHM(Math.max(0, 324000 - biSec)) + ' disp.';
-            document.getElementById('biweeklyBar').style.width = Math.min((biSec / 324000) * 100, 100) + '%';
+            var bSec = d.cumulatedBiweeklyDrivingTime || 0;
+            document.getElementById('biweeklyTxt').textContent = formatHM(bSec);
+            document.getElementById('biweeklyAvail').textContent = formatHM(Math.max(0, 324000 - bSec)) + ' disp.';
+            document.getElementById('biweeklyBar').style.width = Math.min((bSec / 324000) * 100, 100) + '%';
         }
 
-        function showError(msg) {
+        function showError(m) {
             document.getElementById('loading').style.display = 'none';
             document.getElementById('dashboard').style.display = 'none';
             document.getElementById('errorView').style.display = 'block';
-            document.getElementById('errorMessage').textContent = msg;
+            document.getElementById('errorMessage').textContent = m;
         }
 
-        // Mock Mode for local testing
         if (window.location.protocol === 'file:' || window.location.hostname === 'localhost') {
             setTimeout(function() {
-                state = { driver: { name: 'Alejandro Almansa' }, device: { name: '3475NMB' } };
                 render({
-                    activityStatus: 'DRIVING', continuousDrivingTime: 12480, 
-                    dailyDrivingTime: 21120, dailyDrivingTimeLimit: 32400,
+                    activityStatus: 'DRIVING', continuousDrivingTime: 12480, dailyDrivingTime: 21120, dailyDrivingTimeLimit: 32400,
                     dailyDrivingLongDayCount: 1, activeDailyDrivingStart: (Date.now()/1000)-21600,
                     restDuration: 0, nextRestMaxStartTime: (Date.now()/1000)+10800,
-                    weeklyPeriodReducedRestCount: 2, 
-                    cumulatedWeeklyDrivingTime: 138000, 
-                    cumulatedBiweeklyDrivingTime: 255600,
-                    pendingCompensations: 1, nextCompensationDuration: 75600, nextCompensationLimit: 1746662400
+                    weeklyPeriodReducedRestCount: 2, cumulatedWeeklyDrivingTime: 138000, cumulatedBiweeklyDrivingTime: 255600,
+                    pendingCompensations: 1, nextCompensationDuration: 75600
                 });
-            }, 1000);
+            }, 500);
         }
 
         window.geotabDriveAddInInit = geotabDriveAddInInit;
         geotab.addin.tachoDriveFinalV2 = function () {
-            return {
-                initialize: function (api, state, callback) { geotabDriveAddInInit(api, state, callback); },
-                focus: function (api, state) { checkStatus(); }
-            };
+            return { initialize: geotabDriveAddInInit, focus: checkStatus };
         };
     </script>
 </body>
