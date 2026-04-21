@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer-when-downgrade">
     <title>Tiempos de Conducción</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -399,113 +400,94 @@
     </div>
 
     <script>
-        console.log("%c !!! TACHO CUSTOM ADDIN LOADED - v2.0.7 !!!", "background: #222; color: #bada55; font-size: 20px;");
+        console.log("%c !!! TACHO CUSTOM ADDIN LOADED - v2.0.8 !!!", "background: #222; color: #fbbf24; font-size: 20px; font-weight: bold;");
 
-        var api;
-        var state;
-        var cachedDriverId = null;
+        var api, state, cachedDriverId = null, mainSession = null;
 
         function log(msg, data) {
             console.log('[TachographAddin] ' + msg, data !== undefined ? data : '');
         }
 
         function geotabDriveAddInInit(apiObj, stateObj, callback) {
-            api   = apiObj;
+            api = apiObj;
             state = stateObj;
-            log('Iniciando v2.0.7 (Auto-Diagnóstico)...');
+            log('Iniciando v2.0.8 (Versión Blindada)...');
+            
+            // Retardo de 2 segundos para asegurar que el token de sesión esté vinculado al iFrame
+            setTimeout(function() {
+                if (state.driver && state.driver.id) {
+                    cachedDriverId = state.driver.id;
+                    log('ID Conductor detectado:', cachedDriverId);
+                }
+                checkTachographStatus();
+            }, 2000);
 
-            if (state.driver && state.driver.id) {
-                cachedDriverId = state.driver.id;
-                log('ID Conductor (state):', cachedDriverId);
-            }
-
-            document.getElementById('loading').style.display  = 'flex';
-            document.getElementById('dashboard').style.display = 'none';
-
-            checkTachographStatus();
             if (callback) callback();
         }
 
         function checkTachographStatus() {
-            if (cachedDriverId) {
-                fetchTachoData(cachedDriverId);
-                return;
-            }
-
-            if (api && api.getSession) {
-                api.getSession(function(session) {
-                    var email = session.userName;
-                    if (email) {
-                        api.call('Get', { typeName: 'User', search: { name: email } }, function(users) {
-                            if (users && users.length > 0) {
-                                cachedDriverId = users[0].id;
-                                log('ID Conductor (session):', cachedDriverId);
-                                fetchTachoData(cachedDriverId);
-                            } else {
-                                fetchTachoData(null);
-                            }
-                        }, function(err) {
-                            log('Error recuperando ID:', err);
-                            fetchTachoData(null);
-                        });
-                    } else {
-                        fetchTachoData(null);
-                    }
-                });
-            } else {
-                fetchTachoData(null);
-            }
-        }
-
-        function fetchTachoData(driverId) {
-            log('Iniciando ciclo de auto-diagnóstico...');
+            log('Recuperando sesión para inyección de credenciales...');
             
-            // INTENTO 1: Formato 'user' (El más común en Drive App modernas)
-            tryFormato(driverId, { user: { id: driverId } }, 'A (user)', function(success) {
-                if (!success) {
-                    // INTENTO 2: Formato 'userSearch' (Estándar de MyGeotab API)
-                    tryFormato(driverId, { userSearch: { id: driverId } }, 'B (userSearch)', function(success2) {
-                        if (!success2) {
-                            // INTENTO 3: Sin filtro (Dejar que el servidor decida)
-                            tryFormato(driverId, {}, 'C (sin filtro)', function(success3) {
-                                if (!success3) {
-                                    showError('No se pudo establecer comunicación válida con el servidor de Tacógrafos tras 3 intentos.');
-                                }
-                            });
+            api.getSession(function(session) {
+                mainSession = session;
+                log('Sesión capturada con éxito para database:', session.database);
+                
+                if (cachedDriverId) {
+                    fetchTachoData(cachedDriverId);
+                } else {
+                    api.call('Get', { typeName: 'User', search: { name: session.userName } }, function(users) {
+                        if (users && users.length > 0) {
+                            cachedDriverId = users[0].id;
+                            fetchTachoData(cachedDriverId);
+                        } else {
+                            fetchTachoData(null);
                         }
+                    }, function(err) {
+                        log('Error recuperando ID:', err);
+                        fetchTachoData(null);
                     });
                 }
             });
         }
 
-        function tryFormato(driverId, searchObj, label, callback) {
-            log('Probando Formato ' + label + '...');
+        function fetchTachoData(driverId) {
+            log('Consultando API con inyección de credenciales...');
             
-            api.call('Get', { 
-                typeName: 'TachographDrivingTimeStatus', 
-                search: (label === 'C (sin filtro)') ? undefined : searchObj 
-            }, function(results) {
-                log('Respuesta OK Formato ' + label + '. Resultados:', results ? results.length : 0);
-                
+            // Construimos la petición inyectando las credenciales manualmente para saltar bloqueos de dominio
+            // Nota: En algunos casos el SDK requiere que credentials esté fuera del objeto de búsqueda
+            var params = {
+                typeName: 'TachographDrivingTimeStatus',
+                credentials: mainSession, // Inyección manual de seguridad
+                search: {
+                    userSearch: { id: driverId }
+                }
+            };
+
+            api.call('Get', params, function(results) {
+                log('Respuesta OK recibida. Resultados:', results ? results.length : 0);
                 if (results && results.length > 0) {
                     renderData(results[0]);
-                    callback(true);
                 } else {
-                    log('Formato ' + label + ' devolvió 0 resultados.');
-                    callback(false);
+                    showError('No se encontraron datos de Tacógrafo. Verifique su tarjeta.');
                 }
             }, function(err) {
-                log('Formato ' + label + ' RECHAZADO:', err.message || err);
-                callback(false);
+                log('Error con inyección manual:', err.message || err);
+                
+                // Fallback final: Intentar sin el filtro explícito pero con credenciales
+                log('Intentando fallback final sin filtro...');
+                api.call('Get', { typeName: 'TachographDrivingTimeStatus', credentials: mainSession }, function(res2) {
+                    if (res2 && res2.length > 0) renderData(res2[0]);
+                    else showError('Error crítico de autorización en el servidor.');
+                }, function(err2) {
+                    showError('Error de servidor: ' + (err2.message || 'Sin respuesta del servicio de Tacógrafo.'));
+                });
             });
         }
 
-        // --- Utilidades de tiempo ---
         function formatHM(totalSeconds) {
             if (!totalSeconds || isNaN(totalSeconds)) return '0h 0m';
-            var abs  = Math.abs(totalSeconds);
-            var h    = Math.floor(abs / 3600);
-            var m    = Math.floor((abs % 3600) / 60);
+            var h = Math.floor(Math.abs(totalSeconds) / 3600);
+            var m = Math.floor((Math.abs(totalSeconds) % 3600) / 60);
             return h + 'h ' + m + 'm';
         }
 
@@ -513,10 +495,7 @@
             if (!val || val === 0) return '--:--';
             var date = (typeof val === 'number') ? new Date(val * 1000) : new Date(val);
             if (isNaN(date.getTime())) return '--:--';
-            var now = new Date();
-            var isToday = date.getDate() === now.getDate() && date.getMonth() === now.getMonth();
-            var timeStr = date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-            return (isToday ? 'Hoy ' : (date.getDate() + '/' + (date.getMonth()+1) + ' ')) + timeStr;
+            return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
         }
 
         function renderData(d) {
