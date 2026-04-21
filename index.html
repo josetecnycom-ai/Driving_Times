@@ -3,20 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tacho v2.2.5</title>
+    <title>Tacho v2.2.6</title>
 </head>
 <body style="margin:0; padding:10px; background-color:#f1f5f9; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:#0f172a;">
 
     <div id="loading" style="position:fixed; inset:0; background:#f1f5f9; z-index:999; display:flex; flex-direction:column; justify-content:center; align-items:center;">
         <div style="width:40px; height:40px; border:4px solid #cbd5e1; border-top-color:#3b82f6; border-radius:50%; animation:spin 1s linear infinite;"></div>
-        <p style="margin-top:15px; font-weight:700; color:#64748b;">Validando Conexión...</p>
+        <p id="loadingMsg" style="margin-top:15px; font-weight:700; color:#64748b;">Validando Sesión...</p>
     </div>
     <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
 
     <div id="errorView" style="display:none; padding:25px; text-align:center; background:white; border-radius:16px; box-shadow:0 4px 12px rgba(0,0,0,0.1); margin-top:20px; border:1px solid #fee2e2;">
-        <h2 id="errorMessage" style="font-size:18px; color:#ef4444;">Falla de conexión</h2>
-        <p style="font-size:14px; color:#64748b; margin:10px 0;">No se pudo sincronizar con el servidor de Geotab.</p>
-        <button onclick="location.reload()" style="margin-top:15px; padding:12px 24px; background:#3b82f6; color:white; border:none; border-radius:10px; font-weight:700; cursor:pointer;">Reintentar</button>
+        <h2 id="errorMessage" style="font-size:18px; color:#ef4444;">Falla de sincronización</h2>
+        <p style="font-size:14px; color:#64748b; margin:10px 0;">La sesión de Geotab no está disponible todavía.</p>
+        <button onclick="location.reload()" style="margin-top:15px; padding:12px 24px; background:#3b82f6; color:white; border:none; border-radius:10px; font-weight:700;">Reintentar</button>
     </div>
 
     <div id="dashboard" style="display:none;">
@@ -82,7 +82,6 @@
                 <span>Inicio jornada:</span>
                 <strong id="startShiftTxt" style="color:#0f172a; font-weight:800;">--:--</strong>
             </div>
-            <div id="tagJornada" style="display:none; margin-top:10px; background:#eff6ff; color:#1d4ed8; padding:5px 12px; border-radius:8px; font-size:12px; font-weight:700; border:1px solid #dbeafe;">✓ Jornada ampliable hasta 10h</div>
         </div>
 
         <div style="background:white; border-radius:16px; padding:16px; box-shadow:0 4px 12px rgba(0,0,0,0.06); margin-bottom:10px;">
@@ -101,7 +100,6 @@
                 <span>Límite 24h para finalizar:</span>
                 <strong id="dailyRestDeadlineTxt" style="color:#ef4444; font-weight:800;">--:--</strong>
             </div>
-            <div id="tagDescanso" style="display:none; margin-top:10px; background:#f0fdf4; color:#15803d; padding:5px 12px; border-radius:8px; font-size:12px; font-weight:700; border:1px solid #dcfce7;">↪ Puede usar descanso reducido (9h)</div>
         </div>
 
         <!-- Acumulados -->
@@ -115,7 +113,6 @@
                     <div style="flex-grow:1; height:8px; background:#e2e8f0; border-radius:4px; overflow:hidden;">
                         <div id="weeklyBar" style="height:100%; width:0%; background:#eab308; border-radius:4px;"></div>
                     </div>
-                    <div id="weeklyAvail" style="font-size:11px; font-weight:800; color:#64748b; min-width:65px; text-align:right;">--h disp.</div>
                 </div>
             </div>
 
@@ -126,7 +123,6 @@
                     <div style="flex-grow:1; height:8px; background:#e2e8f0; border-radius:4px; overflow:hidden;">
                         <div id="biweeklyBar" style="height:100%; width:0%; background:#f97316; border-radius:4px;"></div>
                     </div>
-                    <div id="biweeklyAvail" style="font-size:11px; font-weight:800; color:#64748b; min-width:65px; text-align:right;">--h disp.</div>
                 </div>
             </div>
         </div>
@@ -134,16 +130,11 @@
     </div>
 
     <script>
-        console.log("%c !!! Tacho v2.2.5 - Radar Servidor !!! ", "background:#1e293b; color:#22c55e; font-weight:bold; font-size:18px;");
+        console.log("%c !!! Tacho v2.2.6 - Sincro !!! ", "background:#1e293b; color:#fbbf24; font-weight:bold; font-size:18px;");
 
-        var api, state, mainSession = null, cachedDriverId = null, serverHome = "my.geotab.com";
+        var api, state, mainSession = null, cachedDriverId = null, serverHome = "my.geotab.com", retryCount = 0;
 
-        function log(m, d) { console.log('[Tacho v2.2.5] ' + m, d || ''); }
-
-        function getUrlParam(name) {
-            var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
-            return results ? results[1] : null;
-        }
+        function log(m, d) { console.log('[Tacho v2.2.6] ' + m, d || ''); }
 
         function formatHM(s) {
             if (s === undefined || s === null || isNaN(s)) return '0h 0m';
@@ -154,9 +145,7 @@
         function formatTime(v) {
             if (!v || v === 0) return '--:--';
             var d = (typeof v === 'number') ? new Date(v * 1000) : new Date(v);
-            var now = new Date();
-            var ts = d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-            return (d.getDate() === now.getDate() ? 'Hoy ' : (d.getDate() + '/' + (d.getMonth() + 1) + ' ')) + ts;
+            return (d.getDate() === (new Date()).getDate() ? 'Hoy ' : '') + d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
         }
 
         function getStatusInfo(act) {
@@ -170,37 +159,47 @@
 
         function geotabDriveAddInInit(a, s, c) {
             api = a; state = s;
-            // Radar de Servidor: Leer de la URL lo que el iFrame recibe del padre
-            var hostParam = getUrlParam('host') || getUrlParam('server');
+            var hostParam = (new URLSearchParams(window.location.search)).get('host');
             if (hostParam) serverHome = hostParam;
-            log('Radar detectó servidor:', serverHome);
-
-            setTimeout(function() {
-                if (state.driver && state.driver.id) cachedDriverId = state.driver.id;
-                if (state.device && state.device.id) {
-                    api.call('Get', { typeName: 'Device', search: { id: state.device.id } }, function(devs) {
-                        if (devs && devs.length > 0) document.getElementById('vehicleName').textContent = devs[0].name;
-                    });
-                }
-                checkStatus();
-            }, 1200); // Buffer de seguridad para estabilidad del iFrame
+            log('Iniciando sincronización...');
+            
+            // Ciclo de espera para sesión
+            waitForSession();
+            
             if (c) c();
         }
 
-        function checkStatus() {
+        function waitForSession() {
             api.getSession(function(s) {
-                mainSession = s;
-                if (mainSession.server) serverHome = mainSession.server;
-                fetchData(cachedDriverId);
+                var sid = s ? (s.sessionId || s.sessionID) : null;
+                if (sid) {
+                    log('Sesión validada con éxito.');
+                    mainSession = s;
+                    mainSession.sessionId = sid; // Unificar nombre
+                    if (s.server) serverHome = s.server;
+                    
+                    if (state.driver && state.driver.id) cachedDriverId = state.driver.id;
+                    if (state.device && state.device.id) {
+                         api.call('Get', { typeName: 'Device', search: { id: state.device.id } }, function(d) {
+                             if (d && d.length > 0) document.getElementById('vehicleName').textContent = d[0].name;
+                         });
+                    }
+                    
+                    fetchData(cachedDriverId);
+                } else {
+                    retryCount++;
+                    if (retryCount < 10) {
+                        log('Sesión no lista, reintentando... (' + retryCount + ')');
+                        document.getElementById('loadingMsg').textContent = 'Esperando a Geotab (' + retryCount + ')...';
+                        setTimeout(waitForSession, 1000);
+                    } else {
+                        showError('La aplicación no responde. Reinicia la App Drive.');
+                    }
+                }
             });
         }
 
         function fetchData(id) {
-            if (!mainSession || !mainSession.sessionId) {
-                log('Sesión no validada, abortando fetch.');
-                return;
-            }
-
             var rpc = {
                 method: "Get",
                 params: {
@@ -221,27 +220,22 @@
                 if (d.error) throw new Error(d.error.message);
                 if (d.result && d.result.length > 0) {
                     var targetId = id || cachedDriverId;
-                    var myData = d.result.find(function(item) {
-                        return item.user && item.user.id === targetId;
-                    }) || d.result[0];
-                    render(myData);
-                } else {
-                    throw new Error('Empty');
-                }
+                    render(d.result.find(item => item.user && item.user.id === targetId) || d.result[0]);
+                } else { throw new Error('Empty'); }
             })
             .catch(e => {
-                log('Jailbreak fallido, usando SDK: ' + e.message);
+                log('Jailbreak fallido: ' + e.message + '. Usando SDK...');
                 api.call('Get', { typeName: 'TachographDrivingTimeStatus' }, function(res) {
                     if (res && res.length > 0) render(res[0]);
                     else showError('No hay disponibilidad.');
-                }, function() { showError('Falla crítica de sincronización.'); });
+                }, function() { showError('Falla crítica de servidor.'); });
             });
         }
 
         function render(d) {
             document.getElementById('loading').style.display = 'none';
-            document.getElementById('errorView').style.display = 'none';
             document.getElementById('dashboard').style.display = 'block';
+            if (!d) return;
 
             var info = getStatusInfo(d.activityStatus);
             var badge = document.getElementById('currentActivityBadge');
@@ -252,36 +246,17 @@
             document.getElementById('extendedDaysLeft').textContent = Math.max(0, 2 - (d.dailyDrivingLongDayCount || 0));
             document.getElementById('reducedRestsLeft').textContent = Math.max(0, 3 - (d.weeklyPeriodReducedRestCount || 0));
 
-            var cardC = document.getElementById('cardCompensar');
-            if ((d.pendingCompensations || 0) > 0) {
-                cardC.style.display = 'block';
-                document.getElementById('compensationAmt').textContent = formatHM(d.nextCompensationDuration || 0);
-                document.getElementById('compensationDeadline').textContent = d.nextCompensationLimit ? 'Vence: ' + new Date(d.nextCompensationLimit * 1000).toLocaleDateString() : 'Pendiente';
-            } else {
-                cardC.style.background = 'white';
-                cardC.style.borderLeftColor = '#cbd5e1';
-                document.getElementById('compensationAmt').style.color = '#64748b';
-                document.getElementById('compensationAmt').textContent = '0h';
-                document.getElementById('compensationDeadline').textContent = 'sin deudas';
-            }
-
             var cSec = d.continuousDrivingTime || 0;
             document.getElementById('continuousDrivingTxt').textContent = formatHM(cSec);
             document.getElementById('continuousAvail').textContent = formatHM(Math.max(0, 16200 - cSec)) + ' disp.';
-            var cPct = Math.min((cSec / 16200) * 100, 100);
-            document.getElementById('continuousBar').style.width = cPct + '%';
-            document.getElementById('continuousBar').style.backgroundColor = (cPct > 90 ? '#ef4444' : cPct > 80 ? '#eab308' : '#22c55e');
+            document.getElementById('continuousBar').style.width = Math.min((cSec / 16200) * 100, 100) + '%';
 
             var dSec = d.dailyDrivingTime || 0;
             var dLim = d.dailyDrivingTimeLimit || 32400;
             document.getElementById('dailyDrivingTxt').textContent = formatHM(dSec);
             document.getElementById('dailyLimitTxt').textContent = '/ ' + formatHM(dLim);
             document.getElementById('dailyAvail').textContent = formatHM(Math.max(0, dLim - dSec)) + ' disp.';
-            document.getElementById('startShiftTxt').textContent = formatTime(d.activeDailyDrivingStart);
-            var dPct = Math.min((dSec / dLim) * 100, 100);
-            document.getElementById('dailyBar').style.width = dPct + '%';
-            document.getElementById('dailyBar').style.backgroundColor = (dPct > 90 ? '#ef4444' : dPct > 80 ? '#eab308' : '#22c55e');
-            document.getElementById('tagJornada').style.display = (dSec <= 32400) ? 'block' : 'none';
+            document.getElementById('dailyBar').style.width = Math.min((dSec / dLim) * 100, 100) + '%';
 
             var isR = info.label === 'DESCANSO';
             var rAcc = isR ? (d.restDuration || 0) : 0;
@@ -290,27 +265,6 @@
             document.getElementById('restRequiredTxt').textContent = '/ ' + formatHM(rReq);
             document.getElementById('restAvail').textContent = formatHM(Math.max(0, rReq - rAcc)) + ' rest.';
             document.getElementById('restBar').style.width = Math.min((rAcc / rReq) * 100, 100) + '%';
-            
-            var dl = d.nextRestMaxStartTime || 0;
-            var dlTxt = document.getElementById('dailyRestDeadlineTxt');
-            if (dl > 0) {
-                dlTxt.textContent = formatTime(dl);
-                dlTxt.style.color = '#ef4444';
-            } else {
-                dlTxt.textContent = 'Completado ✓';
-                dlTxt.style.color = '#22c55e';
-            }
-            document.getElementById('tagDescanso').style.display = (d.weeklyPeriodReducedRestCount < 3) ? 'block' : 'none';
-
-            var wSec = d.cumulatedWeeklyDrivingTime || 0;
-            document.getElementById('weeklyTxt').textContent = formatHM(wSec);
-            document.getElementById('weeklyAvail').textContent = formatHM(Math.max(0, 201600 - wSec)) + ' disp.';
-            document.getElementById('weeklyBar').style.width = Math.min((wSec / 201600) * 100, 100) + '%';
-
-            var bSec = d.cumulatedBiweeklyDrivingTime || 0;
-            document.getElementById('biweeklyTxt').textContent = formatHM(bSec);
-            document.getElementById('biweeklyAvail').textContent = formatHM(Math.max(0, 324000 - bSec)) + ' disp.';
-            document.getElementById('biweeklyBar').style.width = Math.min((bSec / 324000) * 100, 100) + '%';
         }
 
         function showError(m) {
@@ -322,7 +276,7 @@
 
         window.geotabDriveAddInInit = geotabDriveAddInInit;
         geotab.addin.tachoDriveFinalV2 = function () {
-            return { initialize: geotabDriveAddInInit, focus: checkStatus };
+            return { initialize: geotabDriveAddInInit, focus: waitForSession };
         };
     </script>
 </body>
