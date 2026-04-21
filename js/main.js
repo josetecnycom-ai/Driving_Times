@@ -1,3 +1,5 @@
+console.log("%c !!! TACHO CUSTOM ADDIN LOADED - v1.0.3 !!!", "background: #222; color: #bada55; font-size: 20px;");
+
 /**
  * @file main.js
  * Lógica principal del Add-in de Tiempos de Conducción del Tacógrafo para Geotab Drive.
