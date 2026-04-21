@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tacho v2.2.2</title>
+    <title>Tacho v2.2.3</title>
 </head>
 <body style="margin:0; padding:10px; background-color:#f1f5f9; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:#0f172a;">
 
@@ -60,10 +60,13 @@
                 <span id="continuousDrivingTxt" style="font-size:32px; font-weight:900; color:#0f172a;">0h 0m</span>
                 <span style="font-size:15px; color:#64748b; font-weight:500;">/ 4h 30m</span>
             </div>
-            <div style="width:100%; height:12px; background:#e2e8f0; border-radius:6px; overflow:hidden; margin-bottom:10px;">
-                <div id="continuousBar" style="height:100%; width:0%; background:#22c55e; border-radius:6px; transition:width 0.5s;"></div>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <div style="flex-grow:1; height:12px; background:#e2e8f0; border-radius:6px; overflow:hidden;">
+                    <div id="continuousBar" style="height:100%; width:0%; background:#22c55e; border-radius:6px; transition:width 0.5s;"></div>
+                </div>
+                <div id="continuousAvail" style="font-size:11px; font-weight:800; color:#64748b; text-align:right; min-width:60px;">--:-- disp.</div>
             </div>
-            <p style="font-size:11px; color:#64748b;">Pausa obligatoria de 45 min al alcanzar el límite</p>
+            <p style="font-size:11px; color:#64748b; margin-top:8px;">Pausar 45 min al llegar al límite</p>
         </div>
 
         <div class="card" style="background:white; border-radius:16px; padding:16px; box-shadow:0 4px 12px rgba(0,0,0,0.06); margin-bottom:10px;">
@@ -72,8 +75,11 @@
                 <span id="dailyDrivingTxt" style="font-size:32px; font-weight:900; color:#0f172a;">0h 0m</span>
                 <span id="dailyLimitTxt" style="font-size:15px; color:#64748b; font-weight:500;">/ 9h 0m</span>
             </div>
-            <div style="width:100%; height:12px; background:#e2e8f0; border-radius:6px; overflow:hidden; margin-bottom:12px;">
-                <div id="dailyBar" style="height:100%; width:0%; background:#22c55e; border-radius:6px; transition:width 0.5s;"></div>
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+                <div style="flex-grow:1; height:12px; background:#e2e8f0; border-radius:6px; overflow:hidden;">
+                    <div id="dailyBar" style="height:100%; width:0%; background:#22c55e; border-radius:6px; transition:width 0.5s;"></div>
+                </div>
+                <div id="dailyAvail" style="font-size:11px; font-weight:800; color:#64748b; text-align:right; min-width:60px;">--:-- disp.</div>
             </div>
             <div style="display:flex; justify-content:space-between; font-size:13px; color:#64748b;">
                 <span>Inicio jornada:</span>
@@ -88,11 +94,14 @@
                 <span id="restAccumulatedTxt" style="font-size:32px; font-weight:900; color:#0f172a;">0h 0m</span>
                 <span id="restRequiredTxt" style="font-size:15px; color:#64748b; font-weight:500;">/ 11h 0m</span>
             </div>
-            <div style="width:100%; height:12px; background:#e2e8f0; border-radius:6px; overflow:hidden; margin-bottom:12px;">
-                <div id="restBar" style="height:100%; width:0%; background:#22c55e; border-radius:6px; transition:width 0.5s;"></div>
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+                <div style="flex-grow:1; height:12px; background:#e2e8f0; border-radius:6px; overflow:hidden;">
+                    <div id="restBar" style="height:100%; width:0%; background:#3b82f6; border-radius:6px; transition:width 0.5s;"></div>
+                </div>
+                <div id="restAvail" style="font-size:11px; font-weight:800; color:#3b82f6; text-align:right; min-width:60px;">--:-- rest.</div>
             </div>
             <div id="deadlineRow" style="display:flex; justify-content:space-between; font-size:13px; color:#64748b;">
-                <span>Límite 24h para terminar descanso:</span>
+                <span>Límite 24h para finalizar:</span>
                 <strong id="dailyRestDeadlineTxt" style="color:#ef4444; font-weight:800;">--:--</strong>
             </div>
             <div id="tagDescanso" style="display:none; margin-top:10px; background:#f0fdf4; color:#15803d; padding:5px 12px; border-radius:8px; font-size:12px; font-weight:700; border:1px solid #dcfce7;">↪ Puede usar descanso reducido (9h)</div>
@@ -109,7 +118,7 @@
                     <div style="flex-grow:1; height:8px; background:#e2e8f0; border-radius:4px; overflow:hidden;">
                         <div id="weeklyBar" style="height:100%; width:0%; background:#eab308; border-radius:4px;"></div>
                     </div>
-                    <div id="weeklyAvail" style="font-size:11px; font-weight:800; color:#64748b; min-width:55px; text-align:right;">--h disp.</div>
+                    <div id="weeklyAvail" style="font-size:11px; font-weight:800; color:#64748b; min-width:60px; text-align:right;">--h disp.</div>
                 </div>
             </div>
 
@@ -120,7 +129,7 @@
                     <div style="flex-grow:1; height:8px; background:#e2e8f0; border-radius:4px; overflow:hidden;">
                         <div id="biweeklyBar" style="height:100%; width:0%; background:#f97316; border-radius:4px;"></div>
                     </div>
-                    <div id="biweeklyAvail" style="font-size:11px; font-weight:800; color:#64748b; min-width:55px; text-align:right;">--h disp.</div>
+                    <div id="biweeklyAvail" style="font-size:11px; font-weight:800; color:#64748b; min-width:60px; text-align:right;">--h disp.</div>
                 </div>
             </div>
         </div>
@@ -128,16 +137,17 @@
     </div>
 
     <script>
-        console.log("%c !!! Tacho v2.2.2 - NUCLEAR INLINE !!! ", "background:#111827; color:#f43f5e; font-weight:bold; font-size:18px;");
+        console.log("%c !!! Tacho v2.2.3 - Localización !!! ", "background:#1e293b; color:#3b82f6; font-weight:bold; font-size:18px;");
 
         var api, state, mainSession = null, cachedDriverId = null;
 
-        function log(m, d) { console.log('[Tacho v2.2.2] ' + m, d || ''); }
+        function log(m, d) { console.log('[Tacho] ' + m, d || ''); }
 
         function formatHM(s) {
-            if (!s || isNaN(s)) return '0h 0m';
-            var h = Math.floor(Math.abs(s) / 3600);
-            var m = Math.floor((Math.abs(s) % 3600) / 60);
+            if (s === undefined || s === null || isNaN(s)) return '0h 0m';
+            var abs = Math.abs(s);
+            var h = Math.floor(abs / 3600);
+            var m = Math.floor((abs % 3600) / 60);
             return h + 'h ' + m + 'm';
         }
 
@@ -150,22 +160,24 @@
             return (d.getDate() === now.getDate() ? 'Hoy ' : (d.getDate() + '/' + (d.getMonth()+1) + ' ')) + ts;
         }
 
+        function getStatusInfo(act) {
+            act = (act || '').toUpperCase();
+            if (act.includes('DRIVING')) return { label: 'CONDUCCIÓN', color: '#22c55e', text: 'white' };
+            if (act.includes('REST'))    return { label: 'DESCANSO', color: '#3b82f6', text: 'white' };
+            if (act.includes('WORK'))    return { label: 'OTROS TRABAJOS', color: '#f97316', text: 'white' };
+            if (act.includes('AVAIL'))   return { label: 'DISPONIBILIDAD', color: '#eab308', text: 'white' };
+            return { label: act || 'DESCONOCIDO', color: '#cbd5e1', text: '#334155' };
+        }
+
         function geotabDriveAddInInit(a, s, c) {
             api = a; state = s;
-            log('Iniciando...');
             setTimeout(function() {
                 if (state.driver && state.driver.id) cachedDriverId = state.driver.id;
-                
-                // Intento PROACTIVO de obtener matrícula
                 if (state.device && state.device.id) {
-                    api.call('Get', { typeName: 'Device', search: { id: state.device.id } }, function(devices) {
-                        if (devices && devices.length > 0) {
-                            log('Vehículo recuperado proactivamente:', devices[0].name);
-                            document.getElementById('vehicleName').textContent = devices[0].name;
-                        }
+                    api.call('Get', { typeName: 'Device', search: { id: state.device.id } }, function(devs) {
+                        if (devs && devs.length > 0) document.getElementById('vehicleName').textContent = devs[0].name;
                     });
                 }
-                
                 checkStatus();
             }, 800);
             if (c) c();
@@ -188,7 +200,6 @@
                     search: { typeName: "TachographDrivingTimeStatusSearch", userSearch: id ? { id: id } : undefined }
                 }, id: 1
             };
-
             fetch('https://' + mainSession.server + '/apiv1', {
                 method: 'POST', body: JSON.stringify(rpc), headers: { 'Content-Type': 'application/json' }
             })
@@ -198,11 +209,10 @@
                 else throw new Error('Empty');
             })
             .catch(e => {
-                log('Fetch fallido, fallback SDK...', e);
                 api.call('Get', { typeName: 'TachographDrivingTimeStatus' }, function(res) {
                     if (res && res.length > 0) render(res[0]);
-                    else showError('Datos no disponibles.');
-                }, function() { showError('Falla crítica.'); });
+                    else showError('No hay disponibilidad para este conductor.');
+                }, function() { showError('Falla crítica de conexión.'); });
             });
         }
 
@@ -211,40 +221,39 @@
             document.getElementById('errorView').style.display = 'none';
             document.getElementById('dashboard').style.display = 'block';
 
-            // Actividad
-            var act = (d.activityStatus || 'REST').toUpperCase();
+            // Actividad (Traducción + Colores)
+            var info = getStatusInfo(d.activityStatus);
             var badge = document.getElementById('currentActivityBadge');
-            badge.textContent = act;
-            
-            // Colores de badge manuales para bypass total
-            var bColor = "#cbd5e1", tColor = "#334155";
-            if (act.includes('DRIVING')) { bColor = "#dbeafe"; tColor = "#1d4ed8"; }
-            else if (act.includes('REST')) { bColor = "#dcfce7"; tColor = "#15803d"; }
-            else if (act.includes('WORK')) { bColor = "#fef9c3"; tColor = "#854d0e"; }
-            badge.style.backgroundColor = bColor;
-            badge.style.color = tColor;
+            badge.textContent = info.label;
+            badge.style.backgroundColor = info.color;
+            badge.style.color = info.text;
 
-            // Disponibilidad superior
+            // Pills superiores
             var eDays = Math.max(0, 2 - (d.dailyDrivingLongDayCount || 0));
             document.getElementById('extendedDaysLeft').textContent = eDays;
-            
             var rRests = Math.max(0, 3 - (d.weeklyPeriodReducedRestCount || 0));
             document.getElementById('reducedRestsLeft').textContent = rRests;
 
+            var cardC = document.getElementById('cardCompensar');
             if ((d.pendingCompensations || 0) > 0) {
-                document.getElementById('cardCompensar').style.display = 'block';
+                cardC.style.display = 'block';
+                cardC.style.background = '#fff5f5';
                 document.getElementById('compensationAmt').textContent = formatHM(d.nextCompensationDuration || 0);
+                document.getElementById('compensationDeadline').textContent = d.nextCompensationLimit ? 'Vence: ' + new Date(d.nextCompensationLimit * 1000).toLocaleDateString() : 'Pendiente';
             } else {
-                 document.getElementById('cardCompensar').style.background = 'white';
-                 document.getElementById('cardCompensar').style.color = '#64748b';
-                 document.getElementById('cardCompensar').style.borderLeftColor = '#cbd5e1';
-                 document.getElementById('compensationAmt').style.color = '#64748b';
-                 document.getElementById('compensationAmt').textContent = '0h';
+                cardC.style.background = 'white';
+                cardC.style.borderLeftColor = '#cbd5e1';
+                document.getElementById('compensationAmt').style.color = '#64748b';
+                document.getElementById('compensationAmt').textContent = '0h';
+                document.getElementById('compensationDeadline').textContent = 'sin deudas';
+                document.getElementById('compensationDeadline').style.color = '#64748b';
             }
 
             // Continua
             var cSec = d.continuousDrivingTime || 0;
             document.getElementById('continuousDrivingTxt').textContent = formatHM(cSec);
+            var cAvail = Math.max(0, 16200 - cSec);
+            document.getElementById('continuousAvail').textContent = formatHM(cAvail) + ' disp.';
             var cPct = Math.min((cSec / 16200) * 100, 100);
             var cBar = document.getElementById('continuousBar');
             cBar.style.width = cPct + '%';
@@ -255,6 +264,8 @@
             var dLim = d.dailyDrivingTimeLimit || 32400;
             document.getElementById('dailyDrivingTxt').textContent = formatHM(dSec);
             document.getElementById('dailyLimitTxt').textContent = '/ ' + formatHM(dLim);
+            var dAvail = Math.max(0, dLim - dSec);
+            document.getElementById('dailyAvail').textContent = formatHM(dAvail) + ' disp.';
             document.getElementById('startShiftTxt').textContent = formatTime(d.activeDailyDrivingStart);
             var dPct = Math.min((dSec / dLim) * 100, 100);
             var dBar = document.getElementById('dailyBar');
@@ -262,12 +273,14 @@
             dBar.style.backgroundColor = (dPct > 90 ? '#ef4444' : dPct > 80 ? '#eab308' : '#22c55e');
             document.getElementById('tagJornada').style.display = (eDays > 0 && dSec <= 32400) ? 'block' : 'none';
 
-            // Descanso
-            var isR = act.includes('REST');
+            // Descanso (Barra Azul + Contador Restante)
+            var isR = info.label === 'DESCANSO';
             var rAcc = isR ? (d.restDuration || 0) : 0;
             var rReq = (d.dailyDrivingRestMinType || '').includes('Reduced') ? 32400 : 39600;
             document.getElementById('restAccumulatedTxt').textContent = formatHM(rAcc);
             document.getElementById('restRequiredTxt').textContent = '/ ' + formatHM(rReq);
+            var rPend = Math.max(0, rReq - rAcc);
+            document.getElementById('restAvail').textContent = formatHM(rPend) + ' rest.';
             document.getElementById('restBar').style.width = Math.min((rAcc / rReq) * 100, 100) + '%';
             
             var dl = d.nextRestMaxStartTime || 0;
@@ -300,18 +313,17 @@
             document.getElementById('errorMessage').textContent = m;
         }
 
-        // Mock para local
         if (window.location.protocol === 'file:' || window.location.hostname === 'localhost') {
             setTimeout(function() {
+                document.getElementById('vehicleName').textContent = '3165LWY';
                 render({
-                    activityStatus: 'DRIVING', continuousDrivingTime: 12480, dailyDrivingTime: 21120, dailyDrivingTimeLimit: 32400,
+                    activityStatus: 'REST', continuousDrivingTime: 0, dailyDrivingTime: 21480, dailyDrivingTimeLimit: 36000,
                     dailyDrivingLongDayCount: 1, activeDailyDrivingStart: (Date.now()/1000)-21600,
-                    restDuration: 0, nextRestMaxStartTime: (Date.now()/1000)+10800,
-                    weeklyPeriodReducedRestCount: 2, cumulatedWeeklyDrivingTime: 138000, cumulatedBiweeklyDrivingTime: 255600,
-                    pendingCompensations: 1, nextCompensationDuration: 75600
+                    restDuration: 7560, nextRestMaxStartTime: (Date.now()/1000)+18000,
+                    weeklyPeriodReducedRestCount: 1, cumulatedWeeklyDrivingTime: 56760, cumulatedBiweeklyDrivingTime: 154000,
+                    pendingCompensations: 0
                 });
-                document.getElementById('vehicleName').textContent = 'MOCK-TRUCK';
-            }, 600);
+            }, 500);
         }
 
         window.geotabDriveAddInInit = geotabDriveAddInInit;
