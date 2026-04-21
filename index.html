@@ -3,249 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tachograph Drive v2.2.1</title>
-    <style>
-        /* CSS REFORZADO - v2.2.1 */
-        :root {
-            --bg-body: #f1f5f9;
-            --card-bg: #ffffff;
-            --txt-main: #0f172a;
-            --txt-mute: #64748b;
-            --blue: #3b82f6;
-            --green: #22c55e;
-            --yellow: #eab308;
-            --red: #ef4444;
-            --orange: #f97316;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box !important; }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
-            background-color: var(--bg-body) !important;
-            padding: 10px !important;
-            color: var(--txt-main) !important;
-        }
-
-        #dashboard { display: none; width: 100% !important; }
-
-        #dashboard .glass-card {
-            background: var(--card-bg) !important;
-            border-radius: 16px !important;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.06) !important;
-            padding: 15px !important;
-            margin-bottom: 10px !important;
-            border: 1px solid rgba(255, 255, 255, 0.8) !important;
-            overflow: hidden !important;
-        }
-
-        /* ── Header Simple ──────────────────────────── */
-        #dashboard .header {
-            display: flex !important;
-            justify-content: space-between !important;
-            align-items: center !important;
-        }
-        #dashboard .vehicle-info { display: flex !important; align-items: center !important; gap: 8px !important; }
-        #dashboard .vehicle-label {
-            font-size: 13px !important; font-weight: 700 !important; color: var(--txt-mute) !important;
-            background: #f1f5f9 !important; padding: 4px 10px !important; border-radius: 20px !important;
-        }
-
-        #dashboard .status-badge {
-            padding: 5px 12px !important; border-radius: 8px !important;
-            font-weight: 800 !important; font-size: 11px !important;
-            text-transform: uppercase !important;
-        }
-        #dashboard .status-badge.driving { background: #dbeafe !important; color: #1d4ed8 !important; }
-        #dashboard .status-badge.rest    { background: #dcfce7 !important; color: #15803d !important; }
-        #dashboard .status-badge.work    { background: #fef9c3 !important; color: #854d0e !important; }
-
-        /* ── Pills Row ──────────────────────────────── */
-        #dashboard .availability-row {
-            display: grid !important;
-            grid-template-columns: repeat(3, 1fr) !important;
-            gap: 8px !important;
-            margin-bottom: 10px !important;
-        }
-
-        #dashboard .avail-pill {
-            background: white !important; border-radius: 14px !important;
-            padding: 10px !important; box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important;
-            display: flex !important; flex-direction: column !important;
-            border-left: 5px solid #cbd5e1 !important;
-        }
-        #dashboard .avail-pill h4 { font-size: 10px !important; color: var(--txt-mute) !important; text-transform: uppercase !important; margin-bottom: 2px !important; }
-        #dashboard .avail-pill .val { font-size: 22px !important; font-weight: 900 !important; margin: 0 !important; }
-        #dashboard .avail-pill .sub { font-size: 10px !important; color: var(--txt-mute) !important; }
-
-        #dashboard .pill-jornada { border-left-color: var(--green) !important; }
-        #dashboard .pill-descanso { border-left-color: var(--yellow) !important; }
-        #dashboard .pill-compensar { border-left-color: var(--red) !important; background: #fff5f5 !important; }
-        #dashboard .pill-compensar .val { color: var(--red) !important; }
-
-        /* ── Main Cards ─────────────────────────────── */
-        #dashboard h3 { font-size: 12px !important; color: var(--txt-mute) !important; text-transform: uppercase !important; margin-bottom: 8px !important; letter-spacing: 0.05em !important; }
-        
-        #dashboard .metric { display: flex !important; align-items: baseline !important; gap: 5px !important; margin-bottom: 6px !important; }
-        #dashboard .main-val { font-size: 30px !important; font-weight: 900 !important; color: var(--txt-main) !important; }
-        #dashboard .limit-val { font-size: 15px !important; color: var(--txt-mute) !important; font-weight: 500 !important; }
-
-        #dashboard .progress-container { width: 100% !important; height: 12px !important; background: #e2e8f0 !important; border-radius: 6px !important; overflow: hidden !important; margin-bottom: 10px !important; }
-        #dashboard .progress-bar { height: 100% !important; border-radius: 6px !important; transition: width 0.5s ease-out !important; }
-        
-        #dashboard .bg-green  { background: #22c55e !important; }
-        #dashboard .bg-yellow { background: #eab308 !important; }
-        #dashboard .bg-red    { background: #ef4444 !important; }
-        #dashboard .bg-orange { background: #f97316 !important; }
-
-        #dashboard .footer-info { display: flex !important; justify-content: space-between !important; font-size: 13px !important; color: var(--txt-mute) !important; align-items: center !important; }
-        #dashboard .footer-info strong { color: var(--txt-main) !important; font-weight: 800 !important; }
-        #dashboard .danger-msg { color: var(--red) !important; font-weight: 800 !important; }
-
-        #dashboard .tag {
-            font-size: 11px !important; font-weight: 700 !important;
-            padding: 4px 10px !important; border-radius: 6px !important;
-            display: inline-flex !important; align-items: center !important; gap: 4px !important; margin-top: 8px !important;
-        }
-        #dashboard .tag-blue { background: #eff6ff !important; color: #1d4ed8 !important; border: 1px solid #dbeafe !important; }
-        #dashboard .tag-green { background: #f0fdf4 !important; color: #15803d !important; border: 1px solid #dcfce7 !important; }
-
-        /* ── Acumulados ──────────────────────────────── */
-        #dashboard .acumulado-item { margin-bottom: 12px !important; }
-        #dashboard .acumulado-header { display: flex !important; justify-content: space-between !important; margin-bottom: 4px !important; align-items: center !important; }
-        #dashboard .acumulado-title { font-size: 11px !important; color: var(--txt-mute) !important; font-weight: 700 !important; text-transform: uppercase !important; }
-        #dashboard .acumulado-data { display: flex !important; align-items: center !important; gap: 10px !important; }
-        #dashboard .acumulado-data .val { font-size: 17px !important; font-weight: 900 !important; min-width: 70px !important; }
-        #dashboard .acumulado-data .disp { font-size: 11px !important; color: var(--txt-mute) !important; font-weight: 700 !important; text-align: right !important; }
-
-        /* ── States ─────────────────────────────────── */
-        #loading { position: fixed; inset: 0; background: var(--bg-body); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .spinner { width: 40px; height: 40px; border: 4px solid #cbd5e1; border-top-color: var(--blue); border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        #errorView { display: none; padding: 30px; text-align: center; }
-    </style>
+    <title>Tacho v2.2.2</title>
 </head>
-<body>
+<body style="margin:0; padding:10px; background-color:#f1f5f9; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:#0f172a;">
 
-    <div id="loading">
-        <div class="spinner"></div>
-        <p style="margin-top:15px; font-weight:700; color:#64748b;">Conectando...</p>
+    <!-- Contenedor de Carga -->
+    <div id="loading" style="position:fixed; inset:0; background:#f1f5f9; z-index:999; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+        <div style="width:40px; height:40px; border:4px solid #cbd5e1; border-top-color:#3b82f6; border-radius:50%; animation:spin 1s linear infinite;"></div>
+        <p style="margin-top:15px; font-weight:700; color:#64748b;">Sincronizando...</p>
     </div>
+    <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
 
-    <div id="errorView" class="glass-card">
+    <!-- Error View -->
+    <div id="errorView" style="display:none; padding:20px; text-align:center; background:white; border-radius:16px; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
         <h2 id="errorMessage">Error</h2>
-        <button onclick="location.reload()" style="margin-top:20px; padding:10px 20px; border-radius:8px; border:none; background:var(--blue); color:white; font-weight:700;">Reintentar</button>
+        <button onclick="location.reload()" style="margin-top:20px; padding:10px 20px; background:#3b82f6; color:white; border:none; border-radius:8px; font-weight:700;">Reintentar</button>
     </div>
 
-    <div id="dashboard">
-        <!-- Header: Solo vehículo y estado -->
-        <div class="glass-card header">
-            <div class="vehicle-info">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="#64748b"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42.99L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"></path></svg>
-                <div class="vehicle-label" id="vehicleName">----</div>
+    <!-- Dashboard Principal -->
+    <div id="dashboard" style="display:none;">
+        
+        <!-- Header -->
+        <div id="headerBox" style="background:white; border-radius:16px; box-shadow:0 4px 12px rgba(0,0,0,0.06); padding:15px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; border:1px solid rgba(255,255,255,0.8);">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <div style="background:#f1f5f9; padding:5px 12px; border-radius:20px; display:flex; align-items:center; gap:6px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#64748b"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42.99L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"></path></svg>
+                    <span id="vehicleName" style="font-size:14px; font-weight:800; color:#475569;">----</span>
+                </div>
             </div>
-            <div id="currentActivityBadge" class="status-badge">---</div>
+            <div id="currentActivityBadge" style="padding:6px 12px; border-radius:8px; font-weight:800; font-size:11px; text-transform:uppercase; background:#cbd5e1; color:#334155;">---</div>
         </div>
 
-        <!-- Pills Row -->
-        <div class="availability-row">
-            <div class="avail-pill pill-jornada">
-                <h4>Jornadas 10h</h4>
-                <div class="val" id="extendedDaysLeft">--</div>
-                <div class="sub">disponibles</div>
+        <!-- Fila de Availability -->
+        <div id="availRow" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:10px;">
+            <div style="background:white; border-radius:14px; padding:12px 10px; border-left:5px solid #22c55e; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+                <h4 style="font-size:10px; color:#64748b; text-transform:uppercase; margin:0; font-weight:700;">Jornadas 10h</h4>
+                <div id="extendedDaysLeft" style="font-size:24px; font-weight:900; margin:4px 0;">--</div>
+                <div style="font-size:10px; color:#64748b;">disponibles</div>
             </div>
-            <div class="avail-pill pill-descanso">
-                <h4>Descansos 9h</h4>
-                <div class="val" id="reducedRestsLeft">--</div>
-                <div class="sub">disponibles</div>
+            <div style="background:white; border-radius:14px; padding:12px 10px; border-left:5px solid #eab308; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+                <h4 style="font-size:10px; color:#64748b; text-transform:uppercase; margin:0; font-weight:700;">Descansos 9h</h4>
+                <div id="reducedRestsLeft" style="font-size:24px; font-weight:900; margin:4px 0;">--</div>
+                <div style="font-size:10px; color:#64748b;">disponibles</div>
             </div>
-            <div class="avail-pill pill-compensar" id="cardCompensar">
-                <h4>Compensar</h4>
-                <div class="val" id="compensationAmt">0h</div>
-                <div class="sub" id="compensationDeadline">sin deudas</div>
+            <div id="cardCompensar" style="background:#fff5f5; border-radius:14px; padding:12px 10px; border-left:5px solid #ef4444; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+                <h4 style="font-size:10px; color:#ef4444; text-transform:uppercase; margin:0; font-weight:700;">Compensar</h4>
+                <div id="compensationAmt" style="font-size:24px; font-weight:900; margin:4px 0; color:#ef4444;">0h</div>
+                <div id="compensationDeadline" style="font-size:9px; color:#ef4444; font-weight:500;">sin deudas</div>
             </div>
         </div>
 
-        <!-- Cards -->
-        <div class="glass-card">
-            <h3>Conducción Continua</h3>
-            <div class="metric">
-                <span class="main-val" id="continuousDrivingTxt">0h 0m</span>
-                <span class="limit-val">/ 4h 30m</span>
+        <!-- Tarjetas de Conducción -->
+        <div class="card" style="background:white; border-radius:16px; padding:16px; box-shadow:0 4px 12px rgba(0,0,0,0.06); margin-bottom:10px;">
+            <h3 style="font-size:12px; color:#64748b; text-transform:uppercase; margin:0 0 10px 0; font-weight:700; letter-spacing:0.04em;">Conducción Continua</h3>
+            <div style="display:flex; align-items:baseline; gap:6px; margin-bottom:10px;">
+                <span id="continuousDrivingTxt" style="font-size:32px; font-weight:900; color:#0f172a;">0h 0m</span>
+                <span style="font-size:15px; color:#64748b; font-weight:500;">/ 4h 30m</span>
             </div>
-            <div class="progress-container">
-                <div id="continuousBar" class="progress-bar bg-green" style="width: 0%"></div>
+            <div style="width:100%; height:12px; background:#e2e8f0; border-radius:6px; overflow:hidden; margin-bottom:10px;">
+                <div id="continuousBar" style="height:100%; width:0%; background:#22c55e; border-radius:6px; transition:width 0.5s;"></div>
             </div>
             <p style="font-size:11px; color:#64748b;">Pausa obligatoria de 45 min al alcanzar el límite</p>
         </div>
 
-        <div class="glass-card">
-            <h3>Conducción Diaria</h3>
-            <div class="metric">
-                <span class="main-val" id="dailyDrivingTxt">0h 0m</span>
-                <span class="limit-val" id="dailyLimitTxt">/ 9h 0m</span>
+        <div class="card" style="background:white; border-radius:16px; padding:16px; box-shadow:0 4px 12px rgba(0,0,0,0.06); margin-bottom:10px;">
+            <h3 style="font-size:12px; color:#64748b; text-transform:uppercase; margin:0 0 10px 0; font-weight:700; letter-spacing:0.04em;">Conducción Diaria</h3>
+            <div style="display:flex; align-items:baseline; gap:6px; margin-bottom:10px;">
+                <span id="dailyDrivingTxt" style="font-size:32px; font-weight:900; color:#0f172a;">0h 0m</span>
+                <span id="dailyLimitTxt" style="font-size:15px; color:#64748b; font-weight:500;">/ 9h 0m</span>
             </div>
-            <div class="progress-container">
-                <div id="dailyBar" class="progress-bar bg-green" style="width: 0%"></div>
+            <div style="width:100%; height:12px; background:#e2e8f0; border-radius:6px; overflow:hidden; margin-bottom:12px;">
+                <div id="dailyBar" style="height:100%; width:0%; background:#22c55e; border-radius:6px; transition:width 0.5s;"></div>
             </div>
-            <div class="footer-info">
+            <div style="display:flex; justify-content:space-between; font-size:13px; color:#64748b;">
                 <span>Inicio jornada:</span>
-                <strong id="startShiftTxt">--:--</strong>
+                <strong id="startShiftTxt" style="color:#0f172a; font-weight:800;">--:--</strong>
             </div>
-            <div id="tagJornada" class="tag tag-blue" style="display:none;">✓ Jornada ampliable hasta 10h</div>
+            <div id="tagJornada" style="display:none; margin-top:10px; background:#eff6ff; color:#1d4ed8; padding:5px 12px; border-radius:8px; font-size:12px; font-weight:700; border:1px solid #dbeafe;">✓ Jornada ampliable hasta 10h</div>
         </div>
 
-        <div class="glass-card">
-            <h3>Descanso del Día</h3>
-            <div class="metric">
-                <span class="main-val" id="restAccumulatedTxt">0h 0m</span>
-                <span class="limit-val" id="restRequiredTxt">/ 11h 0m</span>
+        <div class="card" style="background:white; border-radius:16px; padding:16px; box-shadow:0 4px 12px rgba(0,0,0,0.06); margin-bottom:10px;">
+            <h3 style="font-size:12px; color:#64748b; text-transform:uppercase; margin:0 0 10px 0; font-weight:700; letter-spacing:0.04em;">Descanso del Día</h3>
+            <div style="display:flex; align-items:baseline; gap:6px; margin-bottom:10px;">
+                <span id="restAccumulatedTxt" style="font-size:32px; font-weight:900; color:#0f172a;">0h 0m</span>
+                <span id="restRequiredTxt" style="font-size:15px; color:#64748b; font-weight:500;">/ 11h 0m</span>
             </div>
-            <div class="progress-container">
-                <div id="restBar" class="progress-bar bg-green" style="width: 0%"></div>
+            <div style="width:100%; height:12px; background:#e2e8f0; border-radius:6px; overflow:hidden; margin-bottom:12px;">
+                <div id="restBar" style="height:100%; width:0%; background:#22c55e; border-radius:6px; transition:width 0.5s;"></div>
             </div>
-            <div class="footer-info" id="deadlineRow">
+            <div id="deadlineRow" style="display:flex; justify-content:space-between; font-size:13px; color:#64748b;">
                 <span>Límite 24h para terminar descanso:</span>
-                <strong id="dailyRestDeadlineTxt">--:--</strong>
+                <strong id="dailyRestDeadlineTxt" style="color:#ef4444; font-weight:800;">--:--</strong>
             </div>
-            <div id="tagDescanso" class="tag tag-green" style="display:none;">↪ Puede usar descanso reducido (9h)</div>
+            <div id="tagDescanso" style="display:none; margin-top:10px; background:#f0fdf4; color:#15803d; padding:5px 12px; border-radius:8px; font-size:12px; font-weight:700; border:1px solid #dcfce7;">↪ Puede usar descanso reducido (9h)</div>
         </div>
 
-        <div class="glass-card">
-            <h3>Acumulados</h3>
-            <div class="acumulado-item">
-                <div class="acumulado-header">
-                    <div class="acumulado-title">Semanal (Máx. 56h)</div>
-                </div>
-                <div class="acumulado-data">
-                    <div class="val" id="weeklyTxt">0h</div>
-                    <div class="progress-container" style="height:8px; margin:0; flex-grow:1;">
-                        <div id="weeklyBar" class="progress-bar bg-yellow" style="width: 0%"></div>
+        <!-- Acumulados -->
+        <div class="card" style="background:white; border-radius:16px; padding:16px; box-shadow:0 4px 12px rgba(0,0,0,0.06); margin-bottom:10px;">
+            <h3 style="font-size:12px; color:#64748b; text-transform:uppercase; margin:0 0 12px 0; font-weight:700; letter-spacing:0.04em;">Acumulados</h3>
+            
+            <div style="margin-bottom:15px;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:11px; font-weight:700; text-transform:uppercase; color:#64748b;">Semanal (MÁX 56h)</div>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div id="weeklyTxt" style="font-size:18px; font-weight:900; min-width:70px;">0h</div>
+                    <div style="flex-grow:1; height:8px; background:#e2e8f0; border-radius:4px; overflow:hidden;">
+                        <div id="weeklyBar" style="height:100%; width:0%; background:#eab308; border-radius:4px;"></div>
                     </div>
-                    <div class="disp" id="weeklyAvail">--h disp.</div>
+                    <div id="weeklyAvail" style="font-size:11px; font-weight:800; color:#64748b; min-width:55px; text-align:right;">--h disp.</div>
                 </div>
             </div>
-            <div class="acumulado-item">
-                <div class="acumulado-header">
-                    <div class="acumulado-title">Bisemanal (Máx. 90h)</div>
-                </div>
-                <div class="acumulado-data">
-                    <div class="val" id="biweeklyTxt">0h</div>
-                    <div class="progress-container" style="height:8px; margin:0; flex-grow:1;">
-                        <div id="biweeklyBar" class="progress-bar bg-orange" style="width: 0%"></div>
+
+            <div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:5px; font-size:11px; font-weight:700; text-transform:uppercase; color:#64748b;">Bisemanal (MÁX 90h)</div>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div id="biweeklyTxt" style="font-size:18px; font-weight:900; min-width:70px;">0h</div>
+                    <div style="flex-grow:1; height:8px; background:#e2e8f0; border-radius:4px; overflow:hidden;">
+                        <div id="biweeklyBar" style="height:100%; width:0%; background:#f97316; border-radius:4px;"></div>
                     </div>
-                    <div class="disp" id="biweeklyAvail">--h disp.</div>
+                    <div id="biweeklyAvail" style="font-size:11px; font-weight:800; color:#64748b; min-width:55px; text-align:right;">--h disp.</div>
                 </div>
             </div>
         </div>
+
     </div>
 
     <script>
-        console.log("%c !!! Tacho v2.2.1 - Blindado !!! ", "background:#1e293b; color:#10b981; font-weight:bold; font-size:18px;");
+        console.log("%c !!! Tacho v2.2.2 - NUCLEAR INLINE !!! ", "background:#111827; color:#f43f5e; font-weight:bold; font-size:18px;");
 
         var api, state, mainSession = null, cachedDriverId = null;
 
-        function log(m, d) { console.log('[Tachograph] ' + m, d || ''); }
+        function log(m, d) { console.log('[Tacho v2.2.2] ' + m, d || ''); }
 
         function formatHM(s) {
             if (!s || isNaN(s)) return '0h 0m';
@@ -259,17 +146,28 @@
             var d = (typeof v === 'number') ? new Date(v * 1000) : new Date(v);
             if (isNaN(d.getTime())) return '--:--';
             var now = new Date();
-            var timeStr = d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-            return (d.getDate() === now.getDate() ? 'Hoy ' : (d.getDate() + '/' + (d.getMonth()+1) + ' ')) + timeStr;
+            var ts = d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+            return (d.getDate() === now.getDate() ? 'Hoy ' : (d.getDate() + '/' + (d.getMonth()+1) + ' ')) + ts;
         }
 
         function geotabDriveAddInInit(a, s, c) {
             api = a; state = s;
-            log('Init v2.2.1');
+            log('Iniciando...');
             setTimeout(function() {
                 if (state.driver && state.driver.id) cachedDriverId = state.driver.id;
+                
+                // Intento PROACTIVO de obtener matrícula
+                if (state.device && state.device.id) {
+                    api.call('Get', { typeName: 'Device', search: { id: state.device.id } }, function(devices) {
+                        if (devices && devices.length > 0) {
+                            log('Vehículo recuperado proactivamente:', devices[0].name);
+                            document.getElementById('vehicleName').textContent = devices[0].name;
+                        }
+                    });
+                }
+                
                 checkStatus();
-            }, 1000);
+            }, 800);
             if (c) c();
         }
 
@@ -297,14 +195,14 @@
             .then(r => r.json())
             .then(d => {
                 if (d.result && d.result.length > 0) render(d.result[0]);
-                else throw new Error('No data');
+                else throw new Error('Empty');
             })
             .catch(e => {
-                log('Fetch fallido, usando SDK...', e);
+                log('Fetch fallido, fallback SDK...', e);
                 api.call('Get', { typeName: 'TachographDrivingTimeStatus' }, function(res) {
                     if (res && res.length > 0) render(res[0]);
-                    else showError('No hay disponibilidad.');
-                }, function(err) { showError('Falla de servidor.'); });
+                    else showError('Datos no disponibles.');
+                }, function() { showError('Falla crítica.'); });
             });
         }
 
@@ -313,13 +211,20 @@
             document.getElementById('errorView').style.display = 'none';
             document.getElementById('dashboard').style.display = 'block';
 
-            if (state && state.device) document.getElementById('vehicleName').textContent = state.device.name || 'Vehículo';
-
+            // Actividad
             var act = (d.activityStatus || 'REST').toUpperCase();
             var badge = document.getElementById('currentActivityBadge');
             badge.textContent = act;
-            badge.className = 'status-badge ' + (act.includes('DRIVING') ? 'driving' : act.includes('REST') ? 'rest' : 'work');
+            
+            // Colores de badge manuales para bypass total
+            var bColor = "#cbd5e1", tColor = "#334155";
+            if (act.includes('DRIVING')) { bColor = "#dbeafe"; tColor = "#1d4ed8"; }
+            else if (act.includes('REST')) { bColor = "#dcfce7"; tColor = "#15803d"; }
+            else if (act.includes('WORK')) { bColor = "#fef9c3"; tColor = "#854d0e"; }
+            badge.style.backgroundColor = bColor;
+            badge.style.color = tColor;
 
+            // Disponibilidad superior
             var eDays = Math.max(0, 2 - (d.dailyDrivingLongDayCount || 0));
             document.getElementById('extendedDaysLeft').textContent = eDays;
             
@@ -327,26 +232,37 @@
             document.getElementById('reducedRestsLeft').textContent = rRests;
 
             if ((d.pendingCompensations || 0) > 0) {
-                document.getElementById('cardCompensar').style.display = 'flex';
+                document.getElementById('cardCompensar').style.display = 'block';
                 document.getElementById('compensationAmt').textContent = formatHM(d.nextCompensationDuration || 0);
+            } else {
+                 document.getElementById('cardCompensar').style.background = 'white';
+                 document.getElementById('cardCompensar').style.color = '#64748b';
+                 document.getElementById('cardCompensar').style.borderLeftColor = '#cbd5e1';
+                 document.getElementById('compensationAmt').style.color = '#64748b';
+                 document.getElementById('compensationAmt').textContent = '0h';
             }
 
+            // Continua
             var cSec = d.continuousDrivingTime || 0;
             document.getElementById('continuousDrivingTxt').textContent = formatHM(cSec);
             var cPct = Math.min((cSec / 16200) * 100, 100);
-            document.getElementById('continuousBar').style.width = cPct + '%';
-            document.getElementById('continuousBar').className = 'progress-bar ' + (cPct > 90 ? 'bg-red' : cPct > 80 ? 'bg-yellow' : 'bg-green');
+            var cBar = document.getElementById('continuousBar');
+            cBar.style.width = cPct + '%';
+            cBar.style.backgroundColor = (cPct > 90 ? '#ef4444' : cPct > 80 ? '#eab308' : '#22c55e');
 
+            // Diaria
             var dSec = d.dailyDrivingTime || 0;
             var dLim = d.dailyDrivingTimeLimit || 32400;
             document.getElementById('dailyDrivingTxt').textContent = formatHM(dSec);
             document.getElementById('dailyLimitTxt').textContent = '/ ' + formatHM(dLim);
             document.getElementById('startShiftTxt').textContent = formatTime(d.activeDailyDrivingStart);
             var dPct = Math.min((dSec / dLim) * 100, 100);
-            document.getElementById('dailyBar').style.width = dPct + '%';
-            document.getElementById('dailyBar').className = 'progress-bar ' + (dPct > 90 ? 'bg-red' : dPct > 80 ? 'bg-yellow' : 'bg-green');
-            document.getElementById('tagJornada').style.display = (eDays > 0 && dSec <= 32400) ? 'inline-flex' : 'none';
+            var dBar = document.getElementById('dailyBar');
+            dBar.style.width = dPct + '%';
+            dBar.style.backgroundColor = (dPct > 90 ? '#ef4444' : dPct > 80 ? '#eab308' : '#22c55e');
+            document.getElementById('tagJornada').style.display = (eDays > 0 && dSec <= 32400) ? 'block' : 'none';
 
+            // Descanso
             var isR = act.includes('REST');
             var rAcc = isR ? (d.restDuration || 0) : 0;
             var rReq = (d.dailyDrivingRestMinType || '').includes('Reduced') ? 32400 : 39600;
@@ -355,16 +271,17 @@
             document.getElementById('restBar').style.width = Math.min((rAcc / rReq) * 100, 100) + '%';
             
             var dl = d.nextRestMaxStartTime || 0;
+            var dlTxt = document.getElementById('dailyRestDeadlineTxt');
             if (dl > 0) {
-                document.getElementById('dailyRestDeadlineTxt').textContent = formatTime(dl);
-                document.getElementById('deadlineRow').className = 'footer-info danger-msg';
+                dlTxt.textContent = formatTime(dl);
+                dlTxt.style.color = '#ef4444';
             } else {
-                document.getElementById('dailyRestDeadlineTxt').textContent = 'Completado ✓';
-                document.getElementById('deadlineRow').className = 'footer-info';
-                document.getElementById('deadlineRow').style.color = '#22c55e';
+                dlTxt.textContent = 'Completado ✓';
+                dlTxt.style.color = '#22c55e';
             }
-            document.getElementById('tagDescanso').style.display = (rRests > 0) ? 'inline-flex' : 'none';
+            document.getElementById('tagDescanso').style.display = (rRests > 0) ? 'block' : 'none';
 
+            // Acumulados
             var wSec = d.cumulatedWeeklyDrivingTime || 0;
             document.getElementById('weeklyTxt').textContent = formatHM(wSec);
             document.getElementById('weeklyAvail').textContent = formatHM(Math.max(0, 201600 - wSec)) + ' disp.';
@@ -383,6 +300,7 @@
             document.getElementById('errorMessage').textContent = m;
         }
 
+        // Mock para local
         if (window.location.protocol === 'file:' || window.location.hostname === 'localhost') {
             setTimeout(function() {
                 render({
@@ -392,7 +310,8 @@
                     weeklyPeriodReducedRestCount: 2, cumulatedWeeklyDrivingTime: 138000, cumulatedBiweeklyDrivingTime: 255600,
                     pendingCompensations: 1, nextCompensationDuration: 75600
                 });
-            }, 500);
+                document.getElementById('vehicleName').textContent = 'MOCK-TRUCK';
+            }, 600);
         }
 
         window.geotabDriveAddInInit = geotabDriveAddInInit;
