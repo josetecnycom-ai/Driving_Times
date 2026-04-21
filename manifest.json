@@ -1,7 +1,7 @@
 {
-    "name": "Tiempos de Conduccion",
+    "name": "TachoDriveCustom",
     "supportEmail": "soporte@tecnoflotas.com",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "items": [
         {
             "url": "https://josetecnycom-ai.github.io/Driving_Times/index.html",
@@ -9,8 +9,18 @@
             "weight": -100,
             "icon": "https://josetecnycom-ai.github.io/Driving_Times/icon.svg",
             "menuName": {
-                "en": "Driving Times",
-                "es": "Tiempos Tacógrafo"
+                "en": "Custom Tacho",
+                "es": "Tacho Personalizado"
+            }
+        },
+        {
+            "url": "https://josetecnycom-ai.github.io/Driving_Times/index.html",
+            "path": "Administration/",
+            "weight": -100,
+            "icon": "https://josetecnycom-ai.github.io/Driving_Times/icon.svg",
+            "menuName": {
+                "en": "Custom Tacho (Admin)",
+                "es": "Tacho Personalizado (Admin)"
             }
         }
     ],

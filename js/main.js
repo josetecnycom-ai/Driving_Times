@@ -367,3 +367,20 @@ if (isMockMode) {
 }
 
 window.geotabDriveAddInInit = geotabDriveAddInInit;
+
+/* Registro oficial para MyGeotab/Drive */
+geotab.addin.tachoDriveCustom = function () {
+    return {
+        initialize: function (api, state, callback) {
+            geotabDriveAddInInit(api, state, callback);
+        },
+        focus: function (api, state) {
+            if (typeof checkTachographStatus === 'function') {
+                checkTachographStatus();
+            }
+        },
+        blur: function (api, state) {
+            // Limpieza si es necesaria
+        }
+    };
+};
