@@ -399,7 +399,7 @@
     </div>
 
     <script>
-        console.log("%c !!! TACHO CUSTOM ADDIN LOADED - v2.0.5 !!!", "background: #222; color: #bada55; font-size: 20px;");
+        console.log("%c !!! TACHO CUSTOM ADDIN LOADED - v2.0.6 !!!", "background: #222; color: #bada55; font-size: 20px;");
 
         var api;
         var state;
@@ -424,7 +424,7 @@
             api   = apiObj;
             state = stateObj;
             
-            log('Iniciando Add-in v2.0.5...');
+            log('Iniciando Add-in v2.0.6...');
 
             if (state.driver && state.driver.id) {
                 cachedDriverId = state.driver.id;
@@ -476,8 +476,13 @@
         function fetchTachoData(driverId) {
             log('Consultando API Tachograph...', driverId || 'Auto-Detección');
             
-            // Usamos formato de callback (Éxito, Error) para máxima compatibilidad
-            api.call('Get', { typeName: 'TachographDrivingTimeStatus', search: {} }, function(results) {
+            // v2.0.6: Intentamos filtrar directamente por usuario para forzar credenciales correctas
+            var searchObj = driverId ? { userSearch: { id: driverId } } : {};
+            
+            api.call('Get', { 
+                typeName: 'TachographDrivingTimeStatus', 
+                search: searchObj 
+            }, function(results) {
                 log('Resultados recibidos:', results ? results.length : 0);
                 
                 if (!results || results.length === 0) {
@@ -485,25 +490,32 @@
                     return;
                 }
 
-                var myData = null;
-                if (driverId) {
-                    myData = results.find(function(r) { return r.user && r.user.id === driverId; });
-                }
-
-                if (!myData && results.length === 1) {
-                    log('Auto-detección: usando único registro disponible.');
-                    myData = results[0];
-                }
+                var myData = (results && results.length > 0) ? results[0] : null;
 
                 if (!myData) {
-                    showError('No se encontraron datos para tu usuario b-id: ' + (driverId || 'N/A'));
+                    showError('No se encontraron datos para tu usuario: ' + (driverId || 'N/A'));
                     return;
                 }
 
                 renderData(myData);
             }, function(err) {
                 log('Error API Tacho Call', err);
-                showError('Error de conexión API: ' + (err.message || 'Error desconocido'));
+                
+                // Si el error es justamente de credentials, intentamos un fallback sin search por si acaso
+                if (driverId && err.message && err.message.indexOf('Credentials') !== -1) {
+                    log('Reintentando sin filtro por error de credenciales...');
+                    api.call('Get', { typeName: 'TachographDrivingTimeStatus' }, function(retryResults) {
+                        if (retryResults && retryResults.length > 0) {
+                            renderData(retryResults[0]);
+                        } else {
+                            showError('Error persistente de credenciales en servidor.');
+                        }
+                    }, function(retryErr) {
+                         showError('Error crítico de API: ' + (retryErr.message || 'Error desconocido'));
+                    });
+                } else {
+                    showError('Error de conexión API: ' + (err.message || 'Error desconocido'));
+                }
             });
         }
 
