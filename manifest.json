@@ -1,7 +1,7 @@
 {
-    "name": "TachoDriveCustom",
+    "name": "Z_TachoCustom_v9",
     "supportEmail": "soporte@tecnoflotas.com",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "items": [
         {
             "url": "https://josetecnycom-ai.github.io/Driving_Times/index.html",
@@ -9,18 +9,18 @@
             "weight": -100,
             "icon": "https://josetecnycom-ai.github.io/Driving_Times/icon.svg",
             "menuName": {
-                "en": "Custom Tacho",
-                "es": "Tacho Personalizado"
+                "en": "Z Custom Tacho",
+                "es": "Z Tacho Test"
             }
         },
         {
             "url": "https://josetecnycom-ai.github.io/Driving_Times/index.html",
-            "path": "Administration/",
+            "path": "GettingStarted/",
             "weight": -100,
             "icon": "https://josetecnycom-ai.github.io/Driving_Times/icon.svg",
             "menuName": {
-                "en": "Custom Tacho (Admin)",
-                "es": "Tacho Personalizado (Admin)"
+                "en": "Z Tacho (Admin)",
+                "es": "Z Tacho (Admin)"
             }
         }
     ],

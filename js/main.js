@@ -372,15 +372,17 @@ window.geotabDriveAddInInit = geotabDriveAddInInit;
 geotab.addin.tachoDriveCustom = function () {
     return {
         initialize: function (api, state, callback) {
+            console.log("!!! TACHO CUSTOM INITIALIZING !!!");
             geotabDriveAddInInit(api, state, callback);
         },
         focus: function (api, state) {
+            console.log("!!! TACHO CUSTOM FOCUS !!!");
             if (typeof checkTachographStatus === 'function') {
                 checkTachographStatus();
             }
         },
         blur: function (api, state) {
-            // Limpieza si es necesaria
+            console.log("!!! TACHO CUSTOM BLUR !!!");
         }
     };
 };
