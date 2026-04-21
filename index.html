@@ -400,7 +400,7 @@
     </div>
 
     <script>
-        console.log("%c !!! TACHO CUSTOM ADDIN LOADED - v2.0.9 !!!", "background: #222; color: #10b981; font-size: 20px; font-weight: bold; text-shadow: 0 0 5px #10b981;");
+        console.log("%c !!! TACHO CUSTOM ADDIN LOADED - v2.1.0 !!!", "background: #111; color: #38bdf8; font-size: 20px; font-weight: bold; text-shadow: 0 0 5px #38bdf8;");
 
         var api, state, cachedDriverId = null, mainSession = null;
 
@@ -411,7 +411,7 @@
         function geotabDriveAddInInit(apiObj, stateObj, callback) {
             api = apiObj;
             state = stateObj;
-            log('Iniciando v2.0.8 (Versión Blindada)...');
+            log('Iniciando v2.1.0 (Inyección Pura)...');
             
             // Retardo de 2 segundos para asegurar que el token de sesión esté vinculado al iFrame
             setTimeout(function() {
@@ -451,47 +451,47 @@
         }
 
         function fetchTachoData(driverId) {
-            log('Consultando API con Formato Maestro (Búsqueda Tipada)...');
+            log('Probando Bypass de Búsqueda (Attempt 1: No Search, ResultsLimit Only)...');
             
-            // v2.0.9: Declaramos el tipo de búsqueda explícitamente y usamos las credenciales validadas
+            // v2.1.0: Omitimos la propiedad 'search' para evitar el bloqueo del iFrame en GitHub
+            // e inyectamos las credenciales en la raíz
             var params = {
                 typeName: 'TachographDrivingTimeStatus',
                 credentials: mainSession,
-                search: {
-                    typeName: 'TachographDrivingTimeStatusSearch', // Sello oficial de tipo
-                    userSearch: driverId ? { id: driverId } : undefined
-                }
+                resultsLimit: 1
             };
 
             api.call('Get', params, function(results) {
-                log('¡Éxito! Respuesta recibida del servidor:', results ? results.length : 0);
-                
+                log('¡Éxito en Attempt 1! Respuesta recibida:', results ? results.length : 0);
                 if (results && results.length > 0) {
-                    // Filtrado local de seguridad por si el servidor devuelve lista
-                    var myData = (driverId) ? results.find(function(r){ return r.user && r.user.id === driverId; }) : results[0];
-                    if (!myData) myData = results[0];
-                    renderData(myData);
+                    renderData(results[0]);
                 } else {
-                    showError('No se encontraron datos. Verifique si la tarjeta de conductor está insertada.');
+                    showError('No se encontraron datos de Tacógrafo (verifique tarjeta).');
                 }
             }, function(err) {
-                log('Error con Búsqueda Tipada:', err.message || err);
+                log('Attempt 1 Fallido:', err.message || err);
                 
-                // Fallback de Emergencia: Búsqueda minimalista con credenciales
-                log('Ejecutando Fallback de Emergencia...');
+                // Intento 2: Búsqueda minimalista literal (v2.0.8 legacy fallback)
+                log('Probando Attempt 2 (Minimal Search Object)...');
                 api.call('Get', { 
                     typeName: 'TachographDrivingTimeStatus', 
                     credentials: mainSession,
-                    search: { typeName: 'TachographDrivingTimeStatusSearch' } 
+                    search: driverId ? { userSearch: { id: driverId } } : {}
                 }, function(res2) {
-                    if (res2 && res2.length > 0) {
-                        var myData2 = (driverId) ? res2.find(function(r){ return r.user && r.user.id === driverId; }) : res2[0];
-                        renderData(myData2 || res2[0]);
-                    } else {
-                        showError('Error persistente de comunicación con el Tacógrafo.');
-                    }
+                    log('¡Éxito en Attempt 2!');
+                    if (res2 && res2.length > 0) renderData(res2[0]);
+                    else showError('No hay disponibilidad para el usuario actual.');
                 }, function(err2) {
-                    showError('Falla crítica: ' + (err2.message || 'Error de servidor'));
+                    log('Attempt 2 Fallido:', err2.message || err2);
+                    
+                    // Intento 3: Llamada a método propietario si existe
+                    log('Probando Attempt 3 (Propietary Method)...');
+                    api.call('GetTachographDrivingTimeStatus', { credentials: mainSession }, function(res3) {
+                        log('¡Éxito en Attempt 3!');
+                        renderData(res3);
+                    }, function(err3) {
+                        showError('Error de servidor persistente: ' + (err3.message || 'Sin acceso a Tacógrafo monitorizado.'));
+                    });
                 });
             });
         }
