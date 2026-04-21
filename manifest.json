@@ -1,16 +1,18 @@
 {
-  "name": "Tiempos de Conducción",
-  "version": "1.0.0",
-  "description": "Visualización del estado del tacógrafo europeo y tiempos de conducción en Geotab Drive.",
-  "supportEmail": "support@example.com",
-  "items": [{
-    "url": "https://josetecnycom-ai.github.io/Driving_Times/",
-    "path": "DriveAppLink/",
-    "menuName": {
-      "en": "Driving Times (Tacho)",
-      "es": "Tiempos Tacógrafo"
-    },
-    "svgIcon": "https://josetecnycom-ai.github.io/Driving_Times/icon.svg"
-  }],
-  "isDriveAddin": true
+    "name": "Tiempos de Conduccion",
+    "supportEmail": "soporte@tecnoflotas.com",
+    "version": "1.0.0",
+    "items": [
+        {
+            "url": "https://josetecnycom-ai.github.io/Driving_Times/index.html",
+            "path": "DriveAppLink/",
+            "weight": -100,
+            "icon": "https://josetecnycom-ai.github.io/Driving_Times/icon.svg",
+            "menuName": {
+                "en": "Driving Times",
+                "es": "Tiempos Tacógrafo"
+            }
+        }
+    ],
+    "isSigned": false
 }
