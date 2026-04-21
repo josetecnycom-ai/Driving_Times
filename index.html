@@ -2,14 +2,15 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="referrer" content="no-referrer-when-downgrade">
-    <title>Tiempos de Conducción</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tachograph Drive Add-in v2.2.0</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #eef2f7;
-            --card-bg: rgba(255, 255, 255, 0.92);
+            --bg-color: #f0f4f8;
+            --card-bg: #ffffff;
             --text-main: #1e293b;
             --text-muted: #64748b;
             --accent-blue: #3b82f6;
@@ -17,486 +18,293 @@
             --accent-yellow: #eab308;
             --accent-orange: #f97316;
             --accent-red: #ef4444;
-            --accent-purple: #8b5cf6;
             --border-radius: 16px;
-            --shadow: 0 4px 20px rgba(0, 0, 0, 0.07);
+            --shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #e8edf4 0%, #dde4f0 100%);
+            background-color: var(--bg-color);
             color: var(--text-main);
-            padding: 16px;
+            padding: 12px;
             min-height: 100vh;
-            -webkit-font-smoothing: antialiased;
+            line-height: 1.4;
         }
 
-        .glass {
+        .glass-card {
             background: var(--card-bg);
-            border: 1px solid rgba(255,255,255,0.6);
-            box-shadow: var(--shadow);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
             border-radius: var(--border-radius);
-            padding: 18px;
+            box-shadow: var(--shadow);
+            padding: 16px;
+            margin-bottom: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.8);
         }
 
-        .header-card {
+        /* ── Header ─────────────────────────────────── */
+        .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 14px;
         }
-        .driver-info { display: flex; align-items: center; gap: 13px; }
+
+        .user-block { display: flex; align-items: center; gap: 12px; }
         .avatar {
-            width: 46px; height: 46px;
-            background: #e2e8f0;
-            border-radius: 50%;
+            width: 48px; height: 48px;
+            background: #cbd5e1; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            color: var(--text-muted); flex-shrink: 0;
+            color: white; flex-shrink: 0;
         }
-        .avatar svg { width: 26px; height: 26px; }
-        .details h2 { font-size: 17px; font-weight: 700; }
+
+        .user-info h2 { font-size: 18px; font-weight: 700; color: #0f172a; }
         .vehicle-pill {
-            font-size: 12px; color: var(--text-muted);
-            background: #f1f5f9; padding: 3px 10px;
-            border-radius: 20px; display: inline-block; margin-top: 4px;
+            font-size: 11px; color: var(--text-muted);
+            background: #f1f5f9; padding: 2px 8px;
+            border-radius: 12px; display: flex; align-items: center; gap: 4px;
+            margin-top: 2px; font-weight: 600;
         }
 
         .status-badge {
-            padding: 6px 14px; border-radius: 8px;
-            font-weight: 700; font-size: 12px;
-            background: #cbd5e1; color: #334155;
-            text-transform: uppercase; letter-spacing: 0.05em;
-            white-space: nowrap;
+            padding: 6px 12px; border-radius: 8px;
+            font-weight: 700; font-size: 11px;
+            text-transform: uppercase; letter-spacing: 0.02em;
         }
-        .status-badge.driving  { background: #dbeafe; color: #1d4ed8; }
-        .status-badge.rest     { background: #dcfce7; color: #15803d; }
-        .status-badge.work     { background: #fef9c3; color: #92400e; }
-        .status-badge.available{ background: #f3e8ff; color: #7c3aed; }
+        .status-badge.driving { background: #dbeafe; color: #1d4ed8; }
+        .status-badge.rest    { background: #dcfce7; color: #15803d; }
+        .status-badge.work    { background: #fef9c3; color: #854d0e; }
 
+        /* ── Availability Row ────────────────────────── */
         .availability-row {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 14px;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 12px;
         }
 
         .avail-pill {
-            flex: 1;
-            min-width: 130px;
-            background: var(--card-bg);
-            border: 1px solid rgba(255,255,255,0.6);
-            box-shadow: var(--shadow);
-            border-radius: 12px;
-            padding: 12px 14px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            position: relative;
-            transition: transform 0.15s;
-        }
-        .avail-pill:hover { transform: translateY(-1px); }
-
-        .avail-icon { font-size: 22px; flex-shrink: 0; }
-
-        .avail-body {
-            display: flex;
-            flex-direction: column;
-            flex-grow: 1;
-        }
-        .avail-label { font-size: 11px; color: var(--text-muted); font-weight: 500; }
-        .avail-body strong { font-size: 20px; font-weight: 700; line-height: 1.2; }
-
-        .avail-sub {
-            font-size: 10px;
-            color: var(--text-muted);
-            position: absolute;
-            bottom: 8px;
-            right: 12px;
-        }
-
-        .avail-pill.state-ok    { border-left: 4px solid var(--accent-green); }
-        .avail-pill.state-warn  { border-left: 4px solid var(--accent-yellow); }
-        .avail-pill.state-danger{ border-left: 4px solid var(--accent-red); }
-        .avail-pill.state-ok    .avail-body strong { color: var(--accent-green); }
-        .avail-pill.state-warn  .avail-body strong { color: var(--accent-yellow); }
-        .avail-pill.state-danger .avail-body strong { color: var(--accent-red); }
-
-        .pill-alert {
-            border-left: 4px solid var(--accent-red);
-            background: #fff5f5;
-        }
-        .pill-alert .avail-body strong { color: var(--accent-red); }
-        .pill-alert .avail-label { color: var(--accent-red); }
-
-        .grid-layout {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
-            gap: 14px;
-        }
-        .span-full { grid-column: 1 / -1; }
-
-        .card h3 {
-            font-size: 13px;
-            color: var(--text-muted);
-            font-weight: 600;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-        }
-
-        .metric-big {
-            display: flex;
-            align-items: baseline;
-            margin-bottom: 12px;
-            gap: 8px;
-        }
-        .metric-big span:first-child { font-size: 30px; font-weight: 800; color: var(--text-main); }
-        .metric-big .limit { font-size: 15px; font-weight: 500; color: var(--text-muted); }
-
-        .progress-bar {
-            width: 100%; height: 10px;
-            background: #e2e8f0; border-radius: 5px;
-            overflow: hidden; margin-bottom: 12px;
-        }
-        .progress-bar.thin { height: 7px; margin-bottom: 0; }
-        .progress {
-            height: 100%; border-radius: 5px;
-            transition: width 0.6s cubic-bezier(.4,0,.2,1);
-        }
-        .fill-blue   { background: linear-gradient(90deg, #60a5fa, #3b82f6); }
-        .fill-green  { background: linear-gradient(90deg, #4ade80, #22c55e); }
-        .fill-yellow { background: linear-gradient(90deg, #fde047, #eab308); }
-        .fill-orange { background: linear-gradient(90deg, #fb923c, #f97316); }
-        .fill-red    { background: linear-gradient(90deg, #f87171, #ef4444); }
-
-        .info-row {
-            font-size: 13px; color: var(--text-muted);
-            display: flex; justify-content: space-between;
-            align-items: center;
-        }
-        .info-row strong { color: var(--text-main); }
-        .danger-text strong,
-        .danger-text span { color: var(--accent-red) !important; font-weight: 700; }
-
-        .tag-ext {
-            font-size: 11px;
-            font-weight: 600;
-            padding: 2px 8px;
-            border-radius: 6px;
-            display: inline-block;
-        }
-        .tag-ext.extended { background: #dbeafe; color: #1d4ed8; }
-        .tag-ext.reduced  { background: #dcfce7; color: #15803d; }
-
-        .subtext { font-size: 12px; color: var(--text-muted); }
-
-        .acumulados-grid { display: flex; flex-direction: column; gap: 16px; }
-        .acumulado-item .label {
-            font-size: 12px; color: var(--text-muted);
-            font-weight: 600; display: block;
-            margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.03em;
-        }
-        .acumulado-item .label em { font-style: normal; color: var(--text-muted); opacity: 0.7; }
-        .val-bar-wrapper { display: flex; align-items: center; gap: 12px; }
-        .val-bar-wrapper strong { font-size: 17px; min-width: 72px; }
-        .val-bar-wrapper .progress-bar { flex-grow: 1; }
-
-        .avail-inline {
-            font-size: 12px; font-weight: 600;
-            color: var(--text-muted); white-space: nowrap; min-width: 55px;
-            text-align: right;
-        }
-
-        .loading-overlay {
-            position: fixed; inset: 0;
-            background: var(--bg-color);
+            background: white; border-radius: 12px;
+            padding: 10px; box-shadow: var(--shadow);
             display: flex; flex-direction: column;
-            justify-content: center; align-items: center; z-index: 100;
-            gap: 12px;
+            border-left: 4px solid #cbd5e1;
+            position: relative;
         }
-        .spinner {
-            width: 38px; height: 38px;
-            border: 4px solid #e2e8f0;
-            border-top-color: var(--accent-blue);
-            border-radius: 50%;
-            animation: spin 0.9s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        .avail-pill h4 { font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; }
+        .avail-pill .val { font-size: 22px; font-weight: 800; line-height: 1.1; margin: 2px 0; }
+        .avail-pill .sub { font-size: 9px; color: var(--text-muted); font-weight: 500; }
 
-        .error-view { text-align: center; padding: 40px 20px; }
-        .error-icon { font-size: 48px; margin-bottom: 12px; }
-        .error-view h2 { margin-bottom: 8px; }
-        button {
-            margin-top: 18px;
-            background: var(--accent-blue); color: white;
-            border: none; padding: 10px 24px;
-            border-radius: 8px; font-weight: 600;
-            cursor: pointer; font-family: 'Inter', sans-serif;
-            font-size: 14px;
+        .pill-jornada { border-left-color: var(--accent-green); }
+        .pill-descanso { border-left-color: var(--accent-yellow); }
+        .pill-compensar { border-left-color: var(--accent-red); background: #fff5f5; }
+        .pill-compensar .val, .pill-compensar h4 { color: var(--accent-red); }
+
+        .warn-icon { position: absolute; top: 10px; right: 8px; color: var(--accent-red); font-size: 14px; }
+
+        /* ── Cards ──────────────────────────────────── */
+        .card h3 {
+            font-size: 12px; color: var(--text-muted);
+            text-transform: uppercase; font-weight: 700;
+            letter-spacing: 0.05em; margin-bottom: 10px;
         }
-        button:hover { background: #2563eb; }
+
+        .metric { display: flex; align-items: baseline; gap: 6px; margin-bottom: 8px; }
+        .metric .main-val { font-size: 32px; font-weight: 800; color: #0f172a; }
+        .metric .limit-val { font-size: 15px; font-weight: 500; color: var(--text-muted); }
+
+        .progress-container {
+            width: 100%; height: 10px;
+            background: #f1f5f9; border-radius: 5px;
+            overflow: hidden; margin-bottom: 10px;
+        }
+        .progress-bar {
+            height: 100%; border-radius: 5px;
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .bg-green { background: #22c55e; }
+        .bg-yellow { background: #eab308; }
+        .bg-red { background: #ef4444; }
+        .bg-orange { background: #f97316; }
+
+        .footer-info { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--text-muted); }
+        .footer-info strong { color: var(--text-main); font-weight: 700; }
+        .danger-msg { color: var(--accent-red); font-weight: 700; }
+
+        .tag {
+            font-size: 11px; font-weight: 600;
+            padding: 4px 10px; border-radius: 6px;
+            display: inline-flex; align-items: center; gap: 4px;
+            margin-top: 8px;
+        }
+        .tag-blue { background: #eff6ff; color: #1d4ed8; }
+        .tag-green { background: #f0fdf4; color: #15803d; }
+
+        /* ── Acumulados ──────────────────────────────── */
+        .acumulado-item { margin-bottom: 12px; }
+        .acumulado-item:last-child { margin-bottom: 0; }
+        .acumulado-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 4px; }
+        .acumulado-title { font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; }
+        .acumulado-title span { opacity: 0.6; font-weight: 500; }
+        .acumulado-data { display: flex; align-items: center; gap: 10px; }
+        .acumulado-data .val { font-size: 18px; font-weight: 800; min-width: 75px; }
+        .acumulado-data .disp { font-size: 11px; color: var(--text-muted); font-weight: 600; white-space: nowrap; }
+
+        /* ── States ─────────────────────────────────── */
+        #loading { position: fixed; inset: 0; background: var(--bg-color); z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 15px; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #cbd5e1; border-top-color: var(--accent-blue); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        #errorView { display: none; text-align: center; padding: 40px 20px; }
+        #dashboard { display: none; }
     </style>
 </head>
 <body>
-    <div id="loading" class="loading-overlay">
+
+    <!-- Loading Screen -->
+    <div id="loading">
         <div class="spinner"></div>
-        <p>Cargando datos del tacógrafo...</p>
+        <p style="font-weight: 600; color: var(--text-muted);">Cargando Tacógrafo...</p>
     </div>
 
-    <div id="errorView" class="error-view" style="display: none;">
-        <div class="error-icon">⚠️</div>
-        <h2 id="errorTitle">Oops...</h2>
-        <p id="errorMessage">No se pudo cargar la información, reintenta más tarde.</p>
-        <button onclick="checkTachographStatus()">Reintentar</button>
+    <!-- Error View -->
+    <div id="errorView" class="glass-card">
+        <div style="font-size: 48px; margin-bottom: 10px;">⚠️</div>
+        <h2 id="errorMessage">Error de conexión</h2>
+        <button onclick="location.reload()" style="margin-top:20px; padding: 10px 20px; background: var(--accent-blue); color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">Reintentar</button>
     </div>
 
-    <div id="dashboard" class="dashboard" style="display: none;">
-        <header class="header-card glass">
-            <div class="driver-info">
+    <!-- Main Dashboard -->
+    <div id="dashboard">
+        <!-- Header -->
+        <div class="glass-card header">
+            <div class="user-block">
                 <div class="avatar">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                    </svg>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                 </div>
-                <div class="details">
-                    <h2 id="driverName">Conductor</h2>
-                    <p id="vehicleName" class="vehicle-pill">
-                        <span class="icon">
-                            <svg viewBox="0 0 16 16" fill="currentColor" style="width:1.2em; height:1.2em; vertical-align: middle; margin-right: 4px;">
-                                <path fill-rule="evenodd" d="M4.333 1.333c0-.368.299-.666.667-.666h8c.368 0 .667.298.667.666v7.334a.667.667 0 01-.667.666h-.69a2.334 2.334 0 01-4.62 0H6.31a2.334 2.334 0 01-4.62 0H1a.667.667 0 01-.667-.666v-4c0-.132.04-.26.112-.37l1.334-2A.667.667 0 012.333 2h2v-.667Zm0 2H2.69L1.667 4.87V8h.224a2.334 2.334 0 012.442-1.31V3.333Zm1.3 4c.195.192.357.417.476.667h1.782a2.334 2.334 0 014.218 0h.225V2H5.667v5.333h-.034ZM4 8a1 1 0 100 2 1 1 0 000-2Zm6 0a1 1 0 100 2 1 1 0 000-2Z" clip-rule="evenodd"></path>
-                            </svg>
-                        </span> Sin vehículo
-                    </p>
+                <div class="user-info">
+                    <h2 id="driverName">Cargando...</h2>
+                    <div class="vehicle-pill">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42.99L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"></path></svg>
+                        <span id="vehicleName">----</span>
+                    </div>
                 </div>
             </div>
-            <div class="status-badge" id="currentActivityBadge">DESCONOCIDO</div>
-        </header>
+            <div id="currentActivityBadge" class="status-badge">---</div>
+        </div>
 
+        <!-- Availability Row -->
         <div class="availability-row">
-            <div class="avail-pill" id="pillExtended">
-                <span class="avail-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 100 100">
-                        <rect width="100" height="100" rx="8" fill="#468847"/>
-                        <g fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="50" cy="50" r="32"/>
-                            <circle cx="50" cy="50" r="10"/>
-                            <path d="M43 57 L30 70"/>
-                            <path d="M57 57 L70 70"/>
-                        </g>
-                    </svg>
-                </span>
-                <div class="avail-body">
-                    <span class="avail-label">Jornadas 10h</span>
-                    <strong id="extendedDaysLeft">2</strong>
-                </div>
-                <span class="avail-sub">disponibles</span>
+            <div class="avail-pill pill-jornada">
+                <h4>Jornadas 10h</h4>
+                <div class="val" id="extendedDaysLeft">--</div>
+                <div class="sub">disponibles</div>
             </div>
-
-            <div class="avail-pill" id="pillReducedRest">
-                <span class="avail-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 100 100">
-                        <g fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="square" stroke-linejoin="miter">
-                            <path d="M35 30 V80" />
-                            <path d="M35 55 H75 V80" />
-                        </g>
-                    </svg>
-                </span>
-                <div class="avail-body">
-                    <span class="avail-label">Descansos 9h</span>
-                    <strong id="reducedRestsLeft">3</strong>
-                </div>
-                <span class="avail-sub">disponibles</span>
+            <div class="avail-pill pill-descanso">
+                <h4>Descansos 9h</h4>
+                <div class="val" id="reducedRestsLeft">--</div>
+                <div class="sub">disponibles</div>
             </div>
-
-            <div class="avail-pill pill-alert" id="pillCompensation" style="display:none;">
-                <span class="avail-icon">⚠️</span>
-                <div class="avail-body">
-                    <span class="avail-label">Compensar</span>
-                    <strong id="compensationAmt">–</strong>
-                </div>
-                <span class="avail-sub" id="compensationDeadline">pendiente</span>
+            <div class="avail-pill pill-compensar" id="cardCompensar">
+                <div class="warn-icon">⚠️</div>
+                <h4>Compensar</h4>
+                <div class="val" id="compensationAmt">0h</div>
+                <div class="sub" id="compensationDeadline">sin deudas</div>
             </div>
         </div>
 
-        <section class="grid-layout">
-            <div class="card glass">
-                <h3>Conducción Continua</h3>
-                <div class="metric-big">
-                    <span id="continuousDrivingTxt">0h 0m</span>
-                    <span class="limit">/ 4h 30m</span>
-                </div>
-                <div class="progress-bar">
-                    <div id="continuousBar" class="progress fill-green" style="width: 0%;"></div>
-                </div>
-                <p class="subtext">Pausa obligatoria de 45 min al alcanzar el límite</p>
+        <!-- Continuous Driving -->
+        <div class="glass-card card">
+            <h3>Conducción Continua</h3>
+            <div class="metric">
+                <span class="main-val" id="continuousDrivingTxt">0h 0m</span>
+                <span class="limit-val">/ 4h 30m</span>
             </div>
-
-            <div class="card glass">
-                <h3>Tiempo de Conducción Diaria</h3>
-                <div class="metric-big">
-                    <span id="dailyDrivingTxt">0h 0m</span>
-                    <span class="limit" id="dailyLimitTxt">/ 9h</span>
-                </div>
-                <div class="progress-bar">
-                    <div id="dailyBar" class="progress fill-green" style="width: 0%;"></div>
-                </div>
-                <div class="info-row">
-                    <span>Inicio jornada:</span>
-                    <strong id="startShiftTxt">--:--</strong>
-                </div>
-                <div class="info-row" style="margin-top:6px;">
-                    <span id="extendedDayTag" class="tag-ext"></span>
-                </div>
+            <div class="progress-container">
+                <div id="continuousBar" class="progress-bar bg-green" style="width: 0%"></div>
             </div>
+            <p class="subtext" style="font-size: 11px; color: var(--text-muted);">Pausa obligatoria de 45 min al alcanzar el límite</p>
+        </div>
 
-            <div class="card glass">
-                <h3>Descanso del Día</h3>
-                <div class="metric-big">
-                    <span id="restAccumulatedTxt">0h 0m</span>
-                    <span class="limit" id="restRequiredTxt">/ 11h</span>
-                </div>
-                <div class="progress-bar">
-                    <div id="restBar" class="progress fill-blue" style="width: 0%;"></div>
-                </div>
-                <div class="info-row" id="deadlineRow">
-                    <span>Límite 24h para terminar descanso:</span>
-                    <strong id="dailyRestDeadlineTxt">--:--</strong>
-                </div>
-                <div class="info-row" style="margin-top:6px;">
-                    <span id="restTypeTag" class="tag-ext"></span>
-                </div>
+        <!-- Daily Driving -->
+        <div class="glass-card card">
+            <h3>Tiempo de Conducción Diaria</h3>
+            <div class="metric">
+                <span class="main-val" id="dailyDrivingTxt">0h 0m</span>
+                <span class="limit-val" id="dailyLimitTxt">/ 9h 0m</span>
             </div>
+            <div class="progress-container">
+                <div id="dailyBar" class="progress-bar bg-green" style="width: 0%"></div>
+            </div>
+            <div class="footer-info">
+                <span>Inicio jornada:</span>
+                <strong id="startShiftTxt">--:--</strong>
+            </div>
+            <div id="tagJornada" class="tag tag-blue" style="display: none;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                Jornada ampliable hasta 10h
+            </div>
+        </div>
 
-            <div class="card glass span-full">
-                <h3>Acumulados</h3>
-                <div class="acumulados-grid">
-                    <div class="acumulado-item">
-                        <span class="label">Esta Semana <em>(Máx 56h)</em></span>
-                        <div class="val-bar-wrapper">
-                            <strong id="weeklyTxt">0h 0m</strong>
-                            <div class="progress-bar thin">
-                                <div id="weeklyBar" class="progress fill-yellow" style="width: 0%;"></div>
-                            </div>
-                            <span id="weeklyAvail" class="avail-inline">–</span>
-                        </div>
+        <!-- Rest of the Day -->
+        <div class="glass-card card">
+            <h3>Descanso del Día</h3>
+            <div class="metric">
+                <span class="main-val" id="restAccumulatedTxt">0h 0m</span>
+                <span class="limit-val" id="restRequiredTxt">/ 11h 0m</span>
+            </div>
+            <div class="progress-container">
+                <div id="restBar" class="progress-bar bg-green" style="width: 0%"></div>
+            </div>
+            <div class="footer-info danger-msg" id="deadlineRow">
+                <span>Límite 24h para terminar descanso:</span>
+                <strong id="dailyRestDeadlineTxt">--:--</strong>
+            </div>
+            <div id="tagDescanso" class="tag tag-green" style="display: none;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M3 10h18M7 15h1M11 15h1M15 15h1"></path></svg>
+                Puede usar descanso reducido (9h)
+            </div>
+        </div>
+
+        <!-- Accumulates -->
+        <div class="glass-card card">
+            <h3>Acumulados</h3>
+            <div class="acumulado-item">
+                <div class="acumulado-header">
+                    <div class="acumulado-title">Esta Semana <span>(MÁX 56h)</span></div>
+                </div>
+                <div class="acumulado-data">
+                    <div class="val" id="weeklyTxt">0h 0m</div>
+                    <div class="progress-container" style="height: 6px; margin: 0;">
+                        <div id="weeklyBar" class="progress-bar bg-yellow" style="width: 0%"></div>
                     </div>
-                    <div class="acumulado-item">
-                        <span class="label">Bisemanal <em>(Máx 90h)</em></span>
-                        <div class="val-bar-wrapper">
-                            <strong id="biweeklyTxt">0h 0m</strong>
-                            <div class="progress-bar thin">
-                                <div id="biweeklyBar" class="progress fill-orange" style="width: 0%;"></div>
-                            </div>
-                            <span id="biweeklyAvail" class="avail-inline">–</span>
-                        </div>
-                    </div>
+                    <div class="disp" id="weeklyAvail">--h disp.</div>
                 </div>
             </div>
-        </section>
+            <div class="acumulado-item">
+                <div class="acumulado-header">
+                    <div class="acumulado-title">Bisemanal <span>(MÁX 90h)</span></div>
+                </div>
+                <div class="acumulado-data">
+                    <div class="val" id="biweeklyTxt">0h 0m</div>
+                    <div class="progress-container" style="height: 6px; margin: 0;">
+                        <div id="biweeklyBar" class="progress-bar bg-orange" style="width: 0%"></div>
+                    </div>
+                    <div class="disp" id="biweeklyAvail">--h disp.</div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
-        console.log("%c !!! TACHO CUSTOM ADDIN LOADED - v2.1.2 !!!", "background: #111; color: #f43f5e; font-size: 20px; font-weight: bold; text-shadow: 0 0 5px #f43f5e;");
+        console.log("%c !!! TACHO CUSTOM ADDIN LOADED - v2.2.0 (Premium) !!!", "background: #1e293b; color: #f43f5e; font-size: 20px; font-weight: bold;");
 
-        var api, state, cachedDriverId = null, mainSession = null;
+        var api, state, mainSession = null, cachedDriverId = null;
 
-        function log(msg, data) {
-            console.log('[TachographAddin] ' + msg, data !== undefined ? data : '');
-        }
+        function log(msg, data) { console.log('[TachographAddin] ' + msg, data || ''); }
 
-        function geotabDriveAddInInit(apiObj, stateObj, callback) {
-            api = apiObj;
-            state = stateObj;
-            log('Iniciando v2.1.2 (Jailbreak Directo)...');
-            
-            setTimeout(function() {
-                if (state.driver && state.driver.id) {
-                    cachedDriverId = state.driver.id;
-                    log('ID Conductor:', cachedDriverId);
-                }
-                checkTachographStatus();
-            }, 2000);
-
-            if (callback) callback();
-        }
-
-        function checkTachographStatus() {
-            log('Iniciando Puente Directo...');
-            api.getSession(function(session) {
-                mainSession = session;
-                // Intentamos capturar el servidor si no viene en el session
-                if (!mainSession.server) {
-                    mainSession.server = window.location.hostname.includes('geotab.com') ? window.location.hostname : 'my.geotab.com';
-                }
-                fetchTachoDataDirect(cachedDriverId);
-            });
-        }
-
-        function fetchTachoDataDirect(driverId) {
-            log('Ejecutando Fetch Directo (Saltando SDK)...');
-            
-            // v2.1.2: Petición JSON-RPC directa para evitar el filtrado de parámetros del iFrame
-            var rpcData = {
-                method: "Get",
-                params: {
-                    typeName: "TachographDrivingTimeStatus",
-                    credentials: {
-                        database: mainSession.database,
-                        sessionId: mainSession.sessionId,
-                        userName: mainSession.userName
-                    },
-                    search: {
-                        typeName: "TachographDrivingTimeStatusSearch",
-                        userSearch: driverId ? { id: driverId } : undefined
-                    }
-                },
-                id: 1
-            };
-
-            var url = 'https://' + mainSession.server + '/apiv1';
-            
-            fetch(url, {
-                method: 'POST',
-                body: JSON.stringify(rpcData),
-                headers: { 'Content-Type': 'application/json' }
-            })
-            .then(function(response) { return response.json(); })
-            .then(function(data) {
-                if (data.result && data.result.length > 0) {
-                    log('¡JAILBREAK EXITOSO! Datos recibidos.');
-                    renderData(data.result[0]);
-                } else if (data.error) {
-                    log('Error en Respuesta Directa:', data.error);
-                    throw new Error(data.error.message || 'Error RPC');
-                } else {
-                    showError('No hay disponibilidad de tacógrafo (directo).');
-                }
-            })
-            .catch(function(err) {
-                log('Fallo en Puente Directo:', err);
-                
-                // Fallback final: Intentar usar el SDK pero con MultiCall ultra-simplificada
-                log('Intentando MultiCall de emergencia...');
-                api.multiCall([{
-                    method: 'Get',
-                    params: { typeName: 'TachographDrivingTimeStatus', credentials: mainSession }
-                }], function(res) {
-                    if (res && res[0] && res[0].length > 0) renderData(res[0][0]);
-                    else showError('Error crítico: El servidor de Geotab rechaza la conexión externa.');
-                }, function(errSDK) {
-                    showError('Falla total de comunicación: Verifique que el complemento "Allow unsigned add-ins" esté activo.');
-                });
-            });
-        }
-
-        function formatHM(totalSeconds) {
-            if (!totalSeconds || isNaN(totalSeconds)) return '0h 0m';
-            var h = Math.floor(Math.abs(totalSeconds) / 3600);
-            var m = Math.floor((Math.abs(totalSeconds) % 3600) / 60);
+        function formatHM(sec) {
+            if (!sec || isNaN(sec)) return '0h 0m';
+            var h = Math.floor(Math.abs(sec) / 3600);
+            var m = Math.floor((Math.abs(sec) % 3600) / 60);
             return h + 'h ' + m + 'm';
         }
 
@@ -504,75 +312,187 @@
             if (!val || val === 0) return '--:--';
             var date = (typeof val === 'number') ? new Date(val * 1000) : new Date(val);
             if (isNaN(date.getTime())) return '--:--';
-            return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+            var now = new Date();
+            var isToday = date.getDate() === now.getDate() && date.getMonth() === now.getMonth();
+            var timeStr = date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+            return (isToday ? 'Hoy ' : (date.getDate() + '/' + (date.getMonth()+1) + ' ')) + timeStr;
         }
 
-        function renderData(d) {
-            if (!d) return;
+        function geotabDriveAddInInit(apiObj, stateObj, callback) {
+            api = apiObj;
+            state = stateObj;
+            log('Iniciando v2.2.0 (Restauración)...');
+            
+            setTimeout(function() {
+                if (state.driver && state.driver.id) {
+                    cachedDriverId = state.driver.id;
+                    log('Driver ID:', cachedDriverId);
+                }
+                checkStatus();
+            }, 1500);
+
+            if (callback) callback();
+        }
+
+        function checkStatus() {
+            log('Iniciando Puente Directo...');
+            api.getSession(function(session) {
+                mainSession = session;
+                if (!mainSession.server) mainSession.server = window.location.hostname.includes('geotab.com') ? window.location.hostname : 'my.geotab.com';
+                fetchData(cachedDriverId);
+            });
+        }
+
+        function fetchData(driverId) {
+            log('Ejecutando Jailbreak Fetch...');
+            var rpcData = {
+                method: "Get",
+                params: {
+                    typeName: "TachographDrivingTimeStatus",
+                    credentials: { database: mainSession.database, sessionId: mainSession.sessionId, userName: mainSession.userName },
+                    search: { typeName: "TachographDrivingTimeStatusSearch", userSearch: driverId ? { id: driverId } : undefined }
+                }, id: 1
+            };
+
+            fetch('https://' + mainSession.server + '/apiv1', {
+                method: 'POST', body: JSON.stringify(rpcData), headers: { 'Content-Type': 'application/json' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.result && data.result.length > 0) {
+                    log('Éxito! Datos recibidos.');
+                    render(data.result[0]);
+                } else {
+                    showError('No se encontraron datos de Tacógrafo.');
+                }
+            })
+            .catch(err => {
+                log('Error directo, probando SDK...', err);
+                api.call('Get', { typeName: 'TachographDrivingTimeStatus' }, function(res) {
+                    if (res && res.length > 0) render(res[0]);
+                    else showError('Error de comunicación persistente.');
+                }, function(e) { showError('Falla crítica de API.'); });
+            });
+        }
+
+        function render(d) {
             document.getElementById('loading').style.display    = 'none';
             document.getElementById('errorView').style.display  = 'none';
             document.getElementById('dashboard').style.display  = 'block';
 
-            if (state && state.driver) document.getElementById('driverName').textContent = state.driver.name;
-            if (state && state.device) document.getElementById('vehicleName').textContent = '🚗 ' + state.device.name;
+            if (!d) return;
 
+            // Datos de usuario
+            if (state && state.driver) document.getElementById('driverName').textContent = state.driver.name;
+            if (state && state.device) document.getElementById('vehicleName').textContent = state.device.name;
+
+            // Activity Badge
             var act = (d.activityStatus || 'REST').toUpperCase();
             var badge = document.getElementById('currentActivityBadge');
             badge.textContent = act;
             badge.className = 'status-badge ' + (act.includes('DRIVING') ? 'driving' : act.includes('REST') ? 'rest' : 'work');
 
-            document.getElementById('extendedDaysLeft').textContent = Math.max(0, 2 - (d.dailyDrivingLongDayCount || 0));
-            document.getElementById('reducedRestsLeft').textContent = Math.max(0, 3 - (d.weeklyPeriodReducedRestCount || 0));
+            // Pills Superiores
+            var lDayUsed = d.dailyDrivingLongDayCount || 0;
+            var extLeft = Math.max(0, 2 - lDayUsed);
+            document.getElementById('extendedDaysLeft').textContent = extLeft;
+            
+            var redRestUsed = d.weeklyPeriodReducedRestCount || 0;
+            var redLeft = Math.max(0, 3 - redRestUsed);
+            document.getElementById('reducedRestsLeft').textContent = redLeft;
 
-            document.getElementById('continuousDrivingTxt').textContent = formatHM(d.continuousDrivingTime);
-            document.getElementById('continuousBar').style.width = Math.min(((d.continuousDrivingTime||0) / 16200) * 100, 100) + '%';
+            var pendingComp = d.pendingCompensations || 0;
+            if (pendingComp > 0) {
+                document.getElementById('cardCompensar').style.display = 'flex';
+                document.getElementById('compensationAmt').textContent = formatHM(d.nextCompensationDuration || 0);
+                document.getElementById('compensationDeadline').textContent = d.nextCompensationLimit ? 'antes del ' + new Date(d.nextCompensationLimit * 1000).toLocaleDateString() : 'Pendiente';
+            } else {
+                document.getElementById('cardCompensar').style.background = 'white';
+                document.getElementById('cardCompensar').querySelector('.warn-icon').style.display = 'none';
+                document.getElementById('cardCompensar').querySelector('h4').style.color = 'var(--text-muted)';
+                document.getElementById('compensationAmt').style.color = 'var(--text-main)';
+            }
 
-            var dDrive = d.dailyDrivingTime || 0;
-            var dLim = d.dailyDrivingTimeLimit || 32400;
-            document.getElementById('dailyDrivingTxt').textContent = formatHM(dDrive);
-            document.getElementById('dailyLimitTxt').textContent = '/ ' + formatHM(dLim);
-            document.getElementById('dailyBar').style.width = Math.min((dDrive / dLim) * 100, 100) + '%';
+            // Continua
+            var contSec = d.continuousDrivingTime || 0;
+            document.getElementById('continuousDrivingTxt').textContent = formatHM(contSec);
+            var contPct = Math.min((contSec / 16200) * 100, 100);
+            document.getElementById('continuousBar').style.width = contPct + '%';
+            document.getElementById('continuousBar').className = 'progress-bar ' + (contPct > 90 ? 'bg-red' : contPct > 80 ? 'bg-yellow' : 'bg-green');
+
+            // Diaria
+            var dailySec = d.dailyDrivingTime || 0;
+            document.getElementById('dailyDrivingTxt').textContent = formatHM(dailySec);
+            document.getElementById('dailyLimitTxt').textContent = '/ ' + formatHM(d.dailyDrivingTimeLimit || 32400);
             document.getElementById('startShiftTxt').textContent = formatRelativeTime(d.activeDailyDrivingStart);
+            var dailyPct = Math.min((dailySec / (d.dailyDrivingTimeLimit || 32400)) * 100, 100);
+            document.getElementById('dailyBar').style.width = dailyPct + '%';
+            document.getElementById('dailyBar').className = 'progress-bar ' + (dailyPct > 90 ? 'bg-red' : dailyPct > 80 ? 'bg-yellow' : 'bg-green');
+            
+            document.getElementById('tagJornada').style.display = (extLeft > 0 && dailySec <= 32400) ? 'inline-flex' : 'none';
 
-            var cRest = act.includes('REST') ? (d.restDuration || 0) : 0;
-            var rReq = (d.dailyDrivingRestMinType || '').includes('Reduced') ? 32400 : 39600;
-            document.getElementById('restAccumulatedTxt').textContent = formatHM(cRest);
-            document.getElementById('restRequiredTxt').textContent = '/ ' + formatHM(rReq);
-            document.getElementById('restBar').style.width = Math.min((cRest/rReq)*100, 100) + '%';
-            document.getElementById('dailyRestDeadlineTxt').textContent = formatRelativeTime(d.nextRestMaxStartTime);
+            // Descanso
+            var isResting = act.includes('REST');
+            var restAcc = isResting ? (d.restDuration || 0) : 0;
+            var restReq = (d.dailyDrivingRestMinType || '').includes('Reduced') ? 32400 : 39600;
+            document.getElementById('restAccumulatedTxt').textContent = formatHM(restAcc);
+            document.getElementById('restRequiredTxt').textContent = '/ ' + formatHM(restReq);
+            document.getElementById('restBar').style.width = Math.min((restAcc / restReq) * 100, 100) + '%';
+            
+            var deadline = d.nextRestMaxStartTime || 0;
+            if (deadline > 0) {
+                document.getElementById('dailyRestDeadlineTxt').textContent = formatRelativeTime(deadline);
+                document.getElementById('deadlineRow').className = 'footer-info danger-msg';
+            } else {
+                document.getElementById('dailyRestDeadlineTxt').textContent = 'Completado ✓';
+                document.getElementById('deadlineRow').className = 'footer-info';
+                document.getElementById('deadlineRow').style.color = 'var(--accent-green)';
+            }
+            document.getElementById('tagDescanso').style.display = (redLeft > 0) ? 'inline-flex' : 'none';
 
-            document.getElementById('weeklyTxt').textContent = formatHM(d.cumulatedWeeklyDrivingTime);
-            document.getElementById('weeklyBar').style.width = Math.min(((d.cumulatedWeeklyDrivingTime||0)/201600)*100, 100) + '%';
-            document.getElementById('biweeklyTxt').textContent = formatHM(d.cumulatedBiweeklyDrivingTime);
-            document.getElementById('biweeklyBar').style.width = Math.min(((d.cumulatedBiweeklyDrivingTime||0)/324000)*100, 100) + '%';
+            // Acumulados
+            var weekSec = d.cumulatedWeeklyDrivingTime || 0;
+            document.getElementById('weeklyTxt').textContent = formatHM(weekSec);
+            document.getElementById('weeklyAvail').textContent = formatHM(Math.max(0, 201600 - weekSec)) + ' disp.';
+            document.getElementById('weeklyBar').style.width = Math.min((weekSec / 201600) * 100, 100) + '%';
+
+            var biSec = d.cumulatedBiweeklyDrivingTime || 0;
+            document.getElementById('biweeklyTxt').textContent = formatHM(biSec);
+            document.getElementById('biweeklyAvail').textContent = formatHM(Math.max(0, 324000 - biSec)) + ' disp.';
+            document.getElementById('biweeklyBar').style.width = Math.min((biSec / 324000) * 100, 100) + '%';
         }
 
         function showError(msg) {
-            document.getElementById('loading').style.display   = 'none';
+            document.getElementById('loading').style.display = 'none';
             document.getElementById('dashboard').style.display = 'none';
             document.getElementById('errorView').style.display = 'block';
             document.getElementById('errorMessage').textContent = msg;
         }
 
-        window.geotabDriveAddInInit = geotabDriveAddInInit;
-        if (typeof geotab === 'undefined') { window.geotab = { addin: {} }; }
-        geotab.addin.tachoDriveFinalV2 = function () {
-            return {
-                initialize: function (api, state, callback) { geotabDriveAddInInit(api, state, callback); },
-                focus: function (api, state) { checkTachographStatus(); }
-            };
-        };
-
+        // Mock Mode for local testing
         if (window.location.protocol === 'file:' || window.location.hostname === 'localhost') {
             setTimeout(function() {
-                renderData({
-                    activityStatus: 'DRIVING',
-                    continuousDrivingTime: 7200, dailyDrivingTime: 18000,
-                    dailyDrivingTimeLimit: 32400, restDuration: 0,
-                    cumulatedWeeklyDrivingTime: 72000, cumulatedBiweeklyDrivingTime: 144000
+                state = { driver: { name: 'Alejandro Almansa' }, device: { name: '3475NMB' } };
+                render({
+                    activityStatus: 'DRIVING', continuousDrivingTime: 12480, 
+                    dailyDrivingTime: 21120, dailyDrivingTimeLimit: 32400,
+                    dailyDrivingLongDayCount: 1, activeDailyDrivingStart: (Date.now()/1000)-21600,
+                    restDuration: 0, nextRestMaxStartTime: (Date.now()/1000)+10800,
+                    weeklyPeriodReducedRestCount: 2, 
+                    cumulatedWeeklyDrivingTime: 138000, 
+                    cumulatedBiweeklyDrivingTime: 255600,
+                    pendingCompensations: 1, nextCompensationDuration: 75600, nextCompensationLimit: 1746662400
                 });
             }, 1000);
         }
+
+        window.geotabDriveAddInInit = geotabDriveAddInInit;
+        geotab.addin.tachoDriveFinalV2 = function () {
+            return {
+                initialize: function (api, state, callback) { geotabDriveAddInInit(api, state, callback); },
+                focus: function (api, state) { checkStatus(); }
+            };
+        };
     </script>
 </body>
 </html>
