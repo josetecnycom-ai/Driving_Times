@@ -139,7 +139,7 @@
     <script>
         console.log("%c !!! Tacho v2.2.3 - Localización !!! ", "background:#1e293b; color:#3b82f6; font-weight:bold; font-size:18px;");
 
-        var api, state, mainSession = null, cachedDriverId = null;
+        var api, state, mainSession = null, cachedDriverId = null, refreshInterval;
 
         function log(m, d) { console.log('[Tacho] ' + m, d || ''); }
 
@@ -179,6 +179,8 @@
                     });
                 }
                 checkStatus();
+                if (refreshInterval) clearInterval(refreshInterval);
+                refreshInterval = setInterval(checkStatus, 30000);
             }, 800);
             if (c) c();
         }
@@ -328,7 +330,17 @@
 
         window.geotabDriveAddInInit = geotabDriveAddInInit;
         geotab.addin.tachoDriveFinalV2 = function () {
-            return { initialize: geotabDriveAddInInit, focus: checkStatus };
+            return { 
+                initialize: geotabDriveAddInInit, 
+                focus: function() { 
+                    checkStatus(); 
+                    if (refreshInterval) clearInterval(refreshInterval);
+                    refreshInterval = setInterval(checkStatus, 30000); 
+                }, 
+                blur: function() { 
+                    if (refreshInterval) clearInterval(refreshInterval); 
+                }
+            };
         };
     </script>
 </body>
