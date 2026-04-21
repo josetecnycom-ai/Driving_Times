@@ -399,11 +399,12 @@
     </div>
 
     <script>
-        console.log("%c !!! TACHO CUSTOM ADDIN LOADED - v2.0.3 !!!", "background: #222; color: #bada55; font-size: 20px;");
+        console.log("%c !!! TACHO CUSTOM ADDIN LOADED - v2.0.4 !!!", "background: #222; color: #bada55; font-size: 20px;");
 
         var api;
         var state;
         var retryCount = 0;
+        var cachedDriverId = null;
 
         var CONT_DRIVING_MAX_SEC  = 4.5 * 3600;
         var DAILY_NORMAL_MAX_SEC  = 9   * 3600;
@@ -423,16 +424,12 @@
             api   = apiObj;
             state = stateObj;
             
-            console.log("FULL STATE OBJECT:", state);
-            log('Inicialización detectada. Verificando conductor...');
+            log('Iniciando Add-in...');
 
-            if (!state.driver && retryCount < 5) {
-                retryCount++;
-                log('Conductor no encontrado en el estado. Reintentando en 2s... (Intento ' + retryCount + ')');
-                setTimeout(function() {
-                    geotabDriveAddInInit(api, state, callback);
-                }, 2000);
-                return;
+            // Intentamos obtener ID de forma inmediata si existe
+            if (state.driver && state.driver.id) {
+                cachedDriverId = state.driver.id;
+                log('ID Conductor detectado:', cachedDriverId);
             }
 
             document.getElementById('loading').style.display  = 'flex';
@@ -441,6 +438,83 @@
             checkTachographStatus();
             if (callback) callback();
         }
+
+        function checkTachographStatus() {
+            log('Verificando identidad y datos...');
+            
+            // 1. Si ya tenemos el ID, procedemos
+            if (cachedDriverId) {
+                fetchTachoData(cachedDriverId);
+                return;
+            }
+
+            // 2. Si no, intentamos recuperarlo de la sesión (Asíncrono)
+            if (api && api.getSession) {
+                log('Buscando sesión asíncrona...');
+                api.getSession(function(session) {
+                    var email = session.userName;
+                    log('Email de sesión encontrado:', email);
+                    
+                    if (email) {
+                        api.call('Get', { typeName: 'User', search: { name: email } }, function(users) {
+                            if (users && users.length > 0) {
+                                cachedDriverId = users[0].id;
+                                log('ID recuperado por búsqueda:', cachedDriverId);
+                                fetchTachoData(cachedDriverId);
+                            } else {
+                                // Plan C: Auto-detección
+                                fetchTachoData(null);
+                            }
+                        }, function(err) {
+                            log('Error buscando usuario', err);
+                            fetchTachoData(null);
+                        });
+                    } else {
+                        fetchTachoData(null);
+                    }
+                });
+            } else {
+                fetchTachoData(null);
+            }
+        }
+
+        function fetchTachoData(driverId) {
+            log('Consultando API Tachograph...', driverId || 'Modo Auto-Detección');
+            
+            api.call('Get', { typeName: 'TachographDrivingTimeStatus', search: {} })
+            .then(function(results) {
+                log('Resultados recibidos:', results ? results.length : 0);
+                
+                if (!results || results.length === 0) {
+                    showError('No hay datos de tacógrafo disponibles.');
+                    return;
+                }
+
+                var myData = null;
+                if (driverId) {
+                    myData = results.find(function(r) { return r.user && r.user.id === driverId; });
+                }
+
+                // Fallback: Si solo hay un resultado, es el nuestro (App Drive)
+                if (!myData && results.length === 1) {
+                    log('Usando resultado único por auto-detección.');
+                    myData = results[0];
+                }
+
+                if (!myData) {
+                    showError('No se han encontrado datos para tu usuario. Asegúrate de tener la tarjeta insertada.');
+                    return;
+                }
+
+                renderData(myData);
+            })
+            .catch(function(err) {
+                log('Error API Tacho', err);
+                showError('Error de conexión: ' + (err.message || 'Error desconocido'));
+            });
+        }
+
+        // --- Funciones de Formateo y Renderizado ---
 
         function formatHM(totalSeconds) {
             if (!totalSeconds || isNaN(totalSeconds)) return '0h 0m';
@@ -454,11 +528,8 @@
             if (!val || val === 0) return '--:--';
             var date = (typeof val === 'number') ? new Date(val * 1000) : new Date(val);
             if (isNaN(date.getTime())) return '--:--';
-
             var now = new Date();
-            var isToday = date.getDate() === now.getDate() &&
-                          date.getMonth() === now.getMonth() &&
-                          date.getFullYear() === now.getFullYear();
+            var isToday = date.getDate() === now.getDate() && date.getMonth() === now.getMonth();
             var timeStr = date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
             return (isToday ? 'Hoy ' : (date.getDate() + '/' + (date.getMonth()+1) + ' ')) + timeStr;
         }
@@ -467,14 +538,14 @@
             if (!val || val === 0) return '--';
             var date = (typeof val === 'number') ? new Date(val * 1000) : new Date(val);
             if (isNaN(date.getTime())) return '--';
-            return date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' });
+            return date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' });
         }
 
         function setPillState(el, count, maxCount) {
             el.classList.remove('state-ok', 'state-warn', 'state-danger');
-            if (count <= 0)          el.classList.add('state-danger');
+            if (count <= 0) el.classList.add('state-danger');
             else if (count < maxCount) el.classList.add('state-warn');
-            else                     el.classList.add('state-ok');
+            else el.classList.add('state-ok');
         }
 
         function renderData(d) {
@@ -482,196 +553,64 @@
             document.getElementById('errorView').style.display  = 'none';
             document.getElementById('dashboard').style.display  = 'block';
 
-            if (!d) { showError('No hay datos de conducción para este conductor.'); return; }
+            if (!d) return;
 
+            // Actualizar nombre si está disponible
             if (state && state.driver) {
-                var n = state.driver.name || ((state.driver.firstName||'') + ' ' + (state.driver.lastName||'')).trim();
-                document.getElementById('driverName').textContent = n || 'Conductor';
+                document.getElementById('driverName').textContent = state.driver.name;
             }
             if (state && state.device) {
-                document.getElementById('vehicleName').innerHTML = `
-                    <svg viewBox="0 0 16 16" fill="currentColor" style="width:1.2em; height:1.2em; vertical-align: middle; margin-right: 4px;">
-                        <path fill-rule="evenodd" d="M4.333 1.333c0-.368.299-.666.667-.666h8c.368 0 .667.298.667.666v7.334a.667.667 0 01-.667.666h-.69a2.334 2.334 0 01-4.62 0H6.31a2.334 2.334 0 01-4.62 0H1a.667.667 0 01-.667-.666v-4c0-.132.04-.26.112-.37l1.334-2A.667.667 0 012.333 2h2v-.667Zm0 2H2.69L1.667 4.87V8h.224a2.334 2.334 0 012.442-1.31V3.333Zm1.3 4c.195.192.357.417.476.667h1.782a2.334 2.334 0 014.218 0h.225V2H5.667v5.333h-.034ZM4 8a1 1 0 100 2 1 1 0 000-2Zm6 0a1 1 0 100 2 1 1 0 000-2Z" clip-rule="evenodd"></path>
-                    </svg>
-                    ${state.device.name || 'Vehículo'}
-                `;
+                document.getElementById('vehicleName').innerHTML = 'V: ' + state.device.name;
             }
 
-            var act = ((d.activityStatus || 'UNKNOWN')).toUpperCase();
+            var act = (d.activityStatus || 'REST').toUpperCase();
             var badge = document.getElementById('currentActivityBadge');
             badge.textContent = act;
-            badge.className   = 'status-badge';
-            if      (act.includes('DRIVING'))   badge.classList.add('driving');
-            else if (act.includes('REST'))      badge.classList.add('rest');
-            else if (act.includes('WORK'))      badge.classList.add('work');
-            else if (act.includes('AVAILABLE')) badge.classList.add('available');
+            badge.className = 'status-badge ' + (act.includes('DRIVING') ? 'driving' : act.includes('REST') ? 'rest' : 'work');
 
-            var longDayCount   = d.dailyDrivingLongDayCount || 0;
-            var extendedLeft   = Math.max(0, MAX_EXTENDED_DAYS - longDayCount);
+            // Jornadas 10h
+            var extendedLeft = Math.max(0, MAX_EXTENDED_DAYS - (d.dailyDrivingLongDayCount || 0));
             document.getElementById('extendedDaysLeft').textContent = extendedLeft;
             setPillState(document.getElementById('pillExtended'), extendedLeft, MAX_EXTENDED_DAYS);
 
-            var reducedUsed   = d.weeklyPeriodReducedRestCount || 0;
-            var reducedLeft   = Math.max(0, MAX_REDUCED_RESTS - reducedUsed);
+            // Descansos 9h
+            var reducedLeft = Math.max(0, MAX_REDUCED_RESTS - (d.weeklyPeriodReducedRestCount || 0));
             document.getElementById('reducedRestsLeft').textContent = reducedLeft;
             setPillState(document.getElementById('pillReducedRest'), reducedLeft, MAX_REDUCED_RESTS);
 
-            var pendingComp = d.pendingCompensations || 0;
-            var pillComp    = document.getElementById('pillCompensation');
-            if (pendingComp > 0) {
-                pillComp.style.display = 'flex';
-                var compDuration = d.nextCompensationDuration || 0;
-                document.getElementById('compensationAmt').textContent      = formatHM(compDuration);
-                document.getElementById('compensationDeadline').textContent =
-                    d.nextCompensationLimit ? ('antes del ' + formatDate(d.nextCompensationLimit)) : 'pendiente';
-            } else {
-                pillComp.style.display = 'none';
-            }
-
+            // Conducción continua
             var contTime = d.continuousDrivingTime || 0;
             document.getElementById('continuousDrivingTxt').textContent = formatHM(contTime);
-            var contPct  = Math.min((contTime / CONT_DRIVING_MAX_SEC) * 100, 100);
-            var contBar  = document.getElementById('continuousBar');
-            contBar.style.width = contPct + '%';
-            contBar.className   = 'progress ' + (contPct > 90 ? 'fill-red' : contPct > 80 ? 'fill-yellow' : 'fill-green');
+            document.getElementById('continuousBar').style.width = Math.min((contTime / CONT_DRIVING_MAX_SEC) * 100, 100) + '%';
 
-            var dailyTimeSec  = d.dailyDrivingTime || 0;
-            var dailyLimitSec = d.dailyDrivingTimeLimit || DAILY_NORMAL_MAX_SEC;
-            var effectiveLimit = dailyLimitSec;
-            if (extendedLeft > 0 && dailyLimitSec <= DAILY_NORMAL_MAX_SEC) {
-                effectiveLimit = DAILY_EXTENDED_MAX_SEC;
-            }
+            // Conducción diaria
+            var dailyTime = d.dailyDrivingTime || 0;
+            var dailyLimit = d.dailyDrivingTimeLimit || DAILY_NORMAL_MAX_SEC;
+            document.getElementById('dailyDrivingTxt').textContent = formatHM(dailyTime);
+            document.getElementById('dailyLimitTxt').textContent = '/ ' + formatHM(dailyLimit);
+            document.getElementById('dailyBar').style.width = Math.min((dailyTime / dailyLimit) * 100, 100) + '%';
+            document.getElementById('startShiftTxt').textContent = formatRelativeTime(d.activeDailyDrivingStart);
 
-            document.getElementById('dailyDrivingTxt').textContent = formatHM(dailyTimeSec);
-            document.getElementById('dailyLimitTxt').textContent   = '/ ' + formatHM(dailyLimitSec);
-            document.getElementById('startShiftTxt').textContent   = formatRelativeTime(d.activeDailyDrivingStart);
+            // Descanso diario
+            var currentRest = act.includes('REST') ? (d.restDuration || 0) : 0;
+            var restReq = (d.dailyDrivingRestMinType || '').includes('Reduced') ? REST_REDUCED_SEC : REST_NORMAL_SEC;
+            document.getElementById('restAccumulatedTxt').textContent = formatHM(currentRest);
+            document.getElementById('restRequiredTxt').textContent = '/ ' + formatHM(restReq);
+            document.getElementById('restBar').style.width = Math.min((currentRest / restReq) * 100, 100) + '%';
+            document.getElementById('dailyRestDeadlineTxt').textContent = formatRelativeTime(d.nextRestMaxStartTime);
 
-            var dailyPct = Math.min((dailyTimeSec / effectiveLimit) * 100, 100);
-            var dailyBar = document.getElementById('dailyBar');
-            dailyBar.style.width = dailyPct + '%';
-            dailyBar.className   = 'progress ' + (dailyPct > 97 ? 'fill-red' : dailyPct > 85 ? 'fill-yellow' : 'fill-green');
-
-            var extTag = document.getElementById('extendedDayTag');
-            if (dailyTimeSec > DAILY_NORMAL_MAX_SEC) {
-                extTag.textContent  = '⏱ Jornada ampliada en uso (10h)';
-                extTag.className    = 'tag-ext extended';
-            } else if (extendedLeft > 0) {
-                extTag.textContent  = '✅ Jornada ampliable hasta 10h';
-                extTag.className    = 'tag-ext extended';
-            } else {
-                extTag.textContent  = '🔒 Límite de 9h — no quedan jornadas ampliadas';
-                extTag.className    = 'tag-ext';
-                extTag.style.color  = 'var(--accent-red)';
-                extTag.style.background = '#fff1f2';
-            }
-
-            var restType       = (d.dailyDrivingRestMinType || '').toLowerCase();
-            var restRequiredSec = REST_NORMAL_SEC;
-            if (restType.includes('reduced') || restType.includes('partial')) {
-                restRequiredSec = REST_REDUCED_SEC;
-            }
-
-            var currentRestSec = act.includes('REST') ? (d.restDuration || 0) : 0;
-            document.getElementById('restAccumulatedTxt').textContent = formatHM(currentRestSec);
-            document.getElementById('restRequiredTxt').textContent    = '/ ' + formatHM(restRequiredSec);
-            var restPct = Math.min((currentRestSec / restRequiredSec) * 100, 100);
-            document.getElementById('restBar').style.width = restPct + '%';
-
-            var deadlineVal  = d.nextRestMaxStartTime || 0;
-            var deadlineRow  = document.getElementById('deadlineRow');
-            if (deadlineVal === 0) {
-                document.getElementById('dailyRestDeadlineTxt').textContent = 'Descanso completado ✓';
-                deadlineRow.classList.remove('danger-text');
-            } else {
-                document.getElementById('dailyRestDeadlineTxt').textContent = formatRelativeTime(deadlineVal);
-                deadlineRow.classList.add('danger-text');
-            }
-
-            var restTag = document.getElementById('restTypeTag');
-            if (reducedLeft > 0) {
-                restTag.textContent = '🛏 Puede usar descanso reducido (9h)';
-                restTag.className   = 'tag-ext reduced';
-            } else {
-                restTag.textContent = '🔒 Descanso mínimo: 11h (reducidos agotados)';
-                restTag.className   = 'tag-ext';
-                restTag.style.color  = 'var(--accent-red)';
-                restTag.style.background = '#fff1f2';
-            }
-
-            var weeklySec   = d.cumulatedWeeklyDrivingTime || 0;
-            var weeklyAvail = d.weeklyDrivingAvailableTime || Math.max(0, WEEKLY_MAX_SEC - weeklySec);
-            document.getElementById('weeklyTxt').textContent   = formatHM(weeklySec);
-            document.getElementById('weeklyAvail').textContent = formatHM(weeklyAvail) + ' disp.';
-            var wPct = Math.min((weeklySec / WEEKLY_MAX_SEC) * 100, 100);
-            var wBar = document.getElementById('weeklyBar');
-            wBar.style.width = wPct + '%';
-            wBar.className   = 'progress ' + (wPct > 90 ? 'fill-red' : wPct > 75 ? 'fill-yellow' : 'fill-yellow');
-
-            var biweeklySec   = d.cumulatedBiweeklyDrivingTime || 0;
-            var biweeklyAvail = d.biweeklyDrivingAvailableTime || Math.max(0, BIWEEKLY_MAX_SEC - biweeklySec);
-            document.getElementById('biweeklyTxt').textContent   = formatHM(biweeklySec);
-            document.getElementById('biweeklyAvail').textContent = formatHM(biweeklyAvail) + ' disp.';
-            var bPct = Math.min((biweeklySec / BIWEEKLY_MAX_SEC) * 100, 100);
-            var bBar = document.getElementById('biweeklyBar');
-            bBar.style.width = bPct + '%';
-            bBar.className   = 'progress ' + (bPct > 90 ? 'fill-red' : bPct > 75 ? 'fill-yellow' : 'fill-orange');
+            // Acumulados
+            document.getElementById('weeklyTxt').textContent = formatHM(d.cumulatedWeeklyDrivingTime);
+            document.getElementById('weeklyBar').style.width = Math.min((d.cumulatedWeeklyDrivingTime / WEEKLY_MAX_SEC) * 100, 100) + '%';
+            document.getElementById('biweeklyTxt').textContent = formatHM(d.cumulatedBiweeklyDrivingTime);
+            document.getElementById('biweeklyBar').style.width = Math.min((d.cumulatedBiweeklyDrivingTime / BIWEEKLY_MAX_SEC) * 100, 100) + '%';
         }
 
         function showError(msg) {
             document.getElementById('loading').style.display   = 'none';
             document.getElementById('dashboard').style.display = 'none';
             document.getElementById('errorView').style.display = 'block';
-            if (msg) document.getElementById('errorMessage').textContent = msg;
-        }
-
-        function checkTachographStatus() {
-            log('Iniciando consulta de datos...');
-            document.getElementById('loading').style.display    = 'flex';
-            document.getElementById('errorView').style.display  = 'none';
-
-            if (!api || !state) {
-                showError('API o Estado no inicializados correctamente.');
-                return;
-            }
-
-            // Intentamos recuperar el driver ID de varias formas
-            var driverId = (state.driver && state.driver.id);
-            
-            if (!driverId && api.getSession) {
-                var session = api.getSession();
-                driverId = session.userName; // En algunos contextos de Drive el ID es el userName
-                log('Recuperando ID desde getSession:', driverId);
-            }
-
-            if (!driverId) {
-                showError('No se ha podido identificar al conductor. Reintenta en unos segundos.');
-                return;
-            }
-
-            api.call('Get', { typeName: 'TachographDrivingTimeStatus', search: {} })
-            .then(function(results) {
-                log('Resultados de API recibidos:', results ? results.length : 0);
-                if (!results || results.length === 0) {
-                    showError('No hay datos de tacógrafo disponibles en este momento.');
-                    return;
-                }
-                var myData = results.find(function(r) { return r.user && (r.user.id === driverId || r.user.name === driverId); });
-                if (!myData) {
-                    // Si no lo encuentra por ID estricto, cogemos el primero para pruebas si solo hay uno
-                    if (results.length === 1) {
-                        log('ID no coincide exactamente, usando el único registro disponible.');
-                        myData = results[0];
-                    } else {
-                        showError('No se encontraron datos para el conductor ' + driverId);
-                        return;
-                    }
-                }
-                renderData(myData);
-            })
-            .catch(function(err) {
-                log('Error API', err);
-                showError('Error al conectar con Geotab: ' + (err.message || err));
-            });
+            document.getElementById('errorMessage').textContent = msg;
         }
 
         window.geotabDriveAddInInit = geotabDriveAddInInit;
@@ -681,57 +620,30 @@
         geotab.addin.tachoDriveFinalV2 = function () {
             return {
                 initialize: function (api, state, callback) {
-                    console.log("!!! TACHO CUSTOM INITIALIZING !!!");
                     geotabDriveAddInInit(api, state, callback);
                 },
                 focus: function (api, state) {
-                    console.log("!!! TACHO CUSTOM FOCUS !!!");
                     checkTachographStatus();
-                },
-                blur: function (api, state) {
-                    console.log("!!! TACHO CUSTOM BLUR !!!");
                 }
             };
         };
 
-        var isMockMode = (
-            window.location.protocol === 'file:' ||
-            window.location.href.indexOf('127.0.0.1') > -1 ||
-            window.location.href.indexOf('localhost') > -1
-        );
-
-        if (isMockMode) {
-            log('▶ Modo Mock activado');
-            document.addEventListener('DOMContentLoaded', function() {
-                setTimeout(function() {
-                    state = {
-                        driver: { id: 'b1', name: 'Alejandro Almansa' },
-                        device: { id: 'b2', name: '3475NMB' }
-                    };
-                    renderData({
-                        user:                          { id: 'b1' },
-                        activityStatus:                'DRIVING',
-                        continuousDrivingTime:         12480,
-                        dailyDrivingTime:              21120,
-                        dailyDrivingTimeLimit:         32400,
-                        dailyDrivingLongDayCount:      1,
-                        activeDailyDrivingStart:       (Date.now() / 1000) - 21600,
-                        restDuration:                  0,
-                        dailyDrivingRestMinType:       'DailyRegular',
-                        nextRestMaxStartTime:          (Date.now() / 1000) + 10800,
-                        weeklyPeriodReducedRestCount:  2,
-                        weeklyPeriodRegularRestCount:  1,
-                        cumulatedWeeklyDrivingTime:    138000,
-                        weeklyDrivingAvailableTime:    63600,
-                        cumulatedBiweeklyDrivingTime:  255600,
-                        biweeklyDrivingAvailableTime:  68400,
-                        pendingCompensations:          1,
-                        nextCompensationDuration:      75600,
-                        nextCompensationLimit:         1746662400
-                    });
-                }, 800);
-            });
+        // --- Mock para pruebas locales ---
+        if (window.location.protocol === 'file:' || window.location.hostname === 'localhost') {
+            setTimeout(function() {
+                renderData({
+                    activityStatus: 'DRIVING',
+                    continuousDrivingTime: 7200,
+                    dailyDrivingTime: 18000,
+                    dailyDrivingTimeLimit: 32400,
+                    restDuration: 0,
+                    cumulatedWeeklyDrivingTime: 72000,
+                    cumulatedBiweeklyDrivingTime: 144000
+                });
+            }, 1000);
         }
     </script>
+</body>
+</html>
 </body>
 </html>
