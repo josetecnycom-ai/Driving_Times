@@ -400,7 +400,7 @@
     </div>
 
     <script>
-        console.log("%c !!! TACHO CUSTOM ADDIN LOADED - v2.0.8 !!!", "background: #222; color: #fbbf24; font-size: 20px; font-weight: bold;");
+        console.log("%c !!! TACHO CUSTOM ADDIN LOADED - v2.0.9 !!!", "background: #222; color: #10b981; font-size: 20px; font-weight: bold; text-shadow: 0 0 5px #10b981;");
 
         var api, state, cachedDriverId = null, mainSession = null;
 
@@ -451,35 +451,47 @@
         }
 
         function fetchTachoData(driverId) {
-            log('Consultando API con inyección de credenciales...');
+            log('Consultando API con Formato Maestro (Búsqueda Tipada)...');
             
-            // Construimos la petición inyectando las credenciales manualmente para saltar bloqueos de dominio
-            // Nota: En algunos casos el SDK requiere que credentials esté fuera del objeto de búsqueda
+            // v2.0.9: Declaramos el tipo de búsqueda explícitamente y usamos las credenciales validadas
             var params = {
                 typeName: 'TachographDrivingTimeStatus',
-                credentials: mainSession, // Inyección manual de seguridad
+                credentials: mainSession,
                 search: {
-                    userSearch: { id: driverId }
+                    typeName: 'TachographDrivingTimeStatusSearch', // Sello oficial de tipo
+                    userSearch: driverId ? { id: driverId } : undefined
                 }
             };
 
             api.call('Get', params, function(results) {
-                log('Respuesta OK recibida. Resultados:', results ? results.length : 0);
+                log('¡Éxito! Respuesta recibida del servidor:', results ? results.length : 0);
+                
                 if (results && results.length > 0) {
-                    renderData(results[0]);
+                    // Filtrado local de seguridad por si el servidor devuelve lista
+                    var myData = (driverId) ? results.find(function(r){ return r.user && r.user.id === driverId; }) : results[0];
+                    if (!myData) myData = results[0];
+                    renderData(myData);
                 } else {
-                    showError('No se encontraron datos de Tacógrafo. Verifique su tarjeta.');
+                    showError('No se encontraron datos. Verifique si la tarjeta de conductor está insertada.');
                 }
             }, function(err) {
-                log('Error con inyección manual:', err.message || err);
+                log('Error con Búsqueda Tipada:', err.message || err);
                 
-                // Fallback final: Intentar sin el filtro explícito pero con credenciales
-                log('Intentando fallback final sin filtro...');
-                api.call('Get', { typeName: 'TachographDrivingTimeStatus', credentials: mainSession }, function(res2) {
-                    if (res2 && res2.length > 0) renderData(res2[0]);
-                    else showError('Error crítico de autorización en el servidor.');
+                // Fallback de Emergencia: Búsqueda minimalista con credenciales
+                log('Ejecutando Fallback de Emergencia...');
+                api.call('Get', { 
+                    typeName: 'TachographDrivingTimeStatus', 
+                    credentials: mainSession,
+                    search: { typeName: 'TachographDrivingTimeStatusSearch' } 
+                }, function(res2) {
+                    if (res2 && res2.length > 0) {
+                        var myData2 = (driverId) ? res2.find(function(r){ return r.user && r.user.id === driverId; }) : res2[0];
+                        renderData(myData2 || res2[0]);
+                    } else {
+                        showError('Error persistente de comunicación con el Tacógrafo.');
+                    }
                 }, function(err2) {
-                    showError('Error de servidor: ' + (err2.message || 'Sin respuesta del servicio de Tacógrafo.'));
+                    showError('Falla crítica: ' + (err2.message || 'Error de servidor'));
                 });
             });
         }
