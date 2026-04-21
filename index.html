@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tacho v2.3.2</title>
+    <title>Tacho v2.3.3</title>
 </head>
 <body style="margin:0; padding:10px; background-color:#f1f5f9; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:#0f172a;">
 
@@ -27,42 +27,53 @@
     <!-- Pantalla Carga -->
     <div id="loading" style="position:fixed; inset:0; background:#f1f5f9; z-index:999; display:flex; flex-direction:column; justify-content:center; align-items:center;">
         <div style="width:45px; height:45px; border:5px solid #e2e8f0; border-top-color:#3b82f6; border-radius:50%; animation:spin 1s linear infinite;"></div>
-        <p id="loadingMsg" style="margin-top:20px; font-weight:800; color:#475569; font-size:14px; letter-spacing:0.05em;">SINCRONIZANDO...</p>
+        <p style="margin-top:20px; font-weight:800; color:#475569; font-size:14px;">SINCRONIZANDO v2.3.3...</p>
     </div>
     <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
 
-    <!-- Error View -->
+    <!-- Error View / Waiting Data -->
     <div id="errorView" style="display:none; padding:35px; text-align:center; background:white; border-radius:28px; box-shadow:0 15px 40px rgba(0,0,0,0.1); margin-top:20px; border:1px solid #fee2e2;">
         <h2 id="errorMessage" style="font-size:22px; color:#ef4444; font-weight:900; margin-bottom:12px;">Error</h2>
-        <p id="errorSub" style="font-size:16px; color:#64748b; margin-bottom:30px;">No hay conexión o no hay datos.</p>
+        <p id="errorSub" style="font-size:16px; color:#64748b; margin-bottom:30px;">--</p>
+        
+        <!-- Panel de Diagnóstico (v2.3.3) -->
+        <div id="diagPanel" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:15px; margin-bottom:25px; display:none; text-align:left;">
+            <p style="font-size:10px; color:#94a3b8; font-weight:800; margin:0 0 10px 0; text-transform:uppercase;">Metadatos de Diagnóstico</p>
+            <div style="font-family:monospace; font-size:11px; color:#475569; word-break:break-all;">
+                <div>CONDUCTOR: <span id="diagDriver" style="font-weight:bold;">--</span></div>
+                <div style="margin-top:4px;">VEHÍCULO: <span id="diagVehicle" style="font-weight:bold;">--</span></div>
+                <div style="margin-top:4px;">SERVIDOR: <span id="diagServer" style="font-weight:bold;">--</span></div>
+            </div>
+        </div>
+
         <button onclick="location.reload()" style="padding:18px 35px; background:#3b82f6; color:white; border:none; border-radius:16px; font-weight:800;">REINTENTAR</button>
     </div>
 
     <!-- Dashboard -->
     <div id="dashboard" style="display:none;">
-        <div style="background:white; border-radius:18px; padding:18px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; border:1px solid rgba(255,255,255,0.8); box-shadow:0 4px 10px rgba(0,0,0,0.03);">
+        <div style="background:white; border-radius:18px; padding:15px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 4px 10px rgba(0,0,0,0.03);">
             <div style="background:#f8fafc; padding:6px 15px; border-radius:25px; font-size:14px; font-weight:900; color:#334155; border:1px solid #e2e8f0;">
-                <span id="vehicleName">CARGANDO...</span>
+                🚚 <span id="vehicleName">CARGANDO...</span>
             </div>
-            <div id="currentActivityBadge" style="padding:8px 16px; border-radius:10px; font-weight:900; font-size:13px; text-transform:uppercase;">---</div>
+            <div id="currentActivityBadge" style="padding:6px 14px; border-radius:10px; font-weight:900; font-size:12px; text-transform:uppercase;">---</div>
         </div>
 
-        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:12px;">
-            <div style="background:white; border-radius:16px; padding:15px 12px; border-left:6px solid #22c55e;">
+        <!-- Tarjetas Metadatos -->
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:12px;">
+            <div style="background:white; border-radius:16px; padding:15px 10px; border-left:6px solid #22c55e;">
                 <div style="font-size:10px; color:#64748b; font-weight:800;">JORNADAS 10h</div>
                 <div id="extendedDaysLeft" style="font-size:26px; font-weight:950; margin:5px 0;">--</div>
             </div>
-            <div style="background:white; border-radius:16px; padding:15px 12px; border-left:6px solid #eab308;">
+            <div style="background:white; border-radius:16px; padding:15px 10px; border-left:6px solid #eab308;">
                 <div style="font-size:10px; color:#64748b; font-weight:800;">DESCANSOS 9h</div>
                 <div id="reducedRestsLeft" style="font-size:26px; font-weight:950; margin:5px 0;">--</div>
             </div>
-            <div id="cardCompensar" style="background:#fffafa; border-radius:16px; padding:15px 12px; border-left:6px solid #ef4444; display:none;">
+            <div id="cardCompensar" style="background:#fffafa; border-radius:16px; padding:15px 10px; border-left:6px solid #ef4444; display:none;">
                 <div style="font-size:10px; color:#ef4444; font-weight:800;">COMPENSAR</div>
-                <div id="compensationAmt" style="font-size:22px; font-weight:950; margin:5px 0; color:#ef4444;">--</div>
+                <div id="compensationAmt" style="font-size:20px; font-weight:950; margin:5px 0; color:#ef4444;">--</div>
             </div>
         </div>
 
-        <!-- Progress Cards -->
         <div style="background:white; border-radius:20px; padding:20px; margin-bottom:12px; box-shadow:0 4px 15px rgba(0,0,0,0.05);">
             <div style="font-size:12px; color:#64748b; font-weight:800; margin-bottom:12px;">CONDUCCIÓN CONTINUA</div>
             <div style="display:flex; align-items:baseline; gap:8px; margin-bottom:15px;">
@@ -70,7 +81,7 @@
                 <span style="font-size:16px; color:#94a3b8; font-weight:600;">/ 4h 30m</span>
             </div>
             <div style="height:14px; background:#f1f5f9; border-radius:7px; overflow:hidden;">
-                <div id="continuousBar" style="height:100%; width:0%; background:#22c55e; border-radius:7px; transition:width 0.6s ease-out;"></div>
+                <div id="continuousBar" style="height:100%; width:0%; background:#22c55e; border-radius:7px;"></div>
             </div>
         </div>
 
@@ -81,7 +92,7 @@
                 <span id="dailyLimitTxt" style="font-size:16px; color:#94a3b8; font-weight:600;">/ 9h 0m</span>
             </div>
             <div style="height:14px; background:#f1f5f9; border-radius:7px; overflow:hidden;">
-                <div id="dailyBar" style="height:100%; width:0%; background:#22c55e; border-radius:7px; transition:width 0.6s ease-out;"></div>
+                <div id="dailyBar" style="height:100%; width:0%; background:#22c55e; border-radius:7px;"></div>
             </div>
         </div>
 
@@ -92,27 +103,24 @@
                 <span id="restRequiredTxt" style="font-size:16px; color:#94a3b8; font-weight:600;">/ 11h 0m</span>
             </div>
             <div style="height:14px; background:#f1f5f9; border-radius:7px; overflow:hidden;">
-                <div id="restBar" style="height:100%; width:0%; background:#3b82f6; border-radius:7px; transition:width 0.6s ease-out;"></div>
+                <div id="restBar" style="height:100%; width:0%; background:#3b82f6; border-radius:7px;"></div>
             </div>
         </div>
     </div>
 
     <script>
-        console.log("%c !!! Tacho v2.3.2 - Boton Inmortal !!! ", "background:#0f172a; color:#3b82f6; font-weight:bold; font-size:20px; padding:5px;");
+        console.log("%c !!! Tacho v2.3.3 - Diagnostico !!! ", "background:#1e293b; color:#3b82f6; font-weight:bold; font-size:18px;");
 
-        var api, state, cachedDriverId = null, serverHome = "my.geotab.com";
+        var api, state, cachedDriverName = "--", serverHome = "my.geotab.com";
 
-        function log(m, d) { console.log('[Tacho v2.3.2] ' + m, d || ''); }
+        function log(m, d) { console.log('[Tacho v2.3.3] ' + m, d || ''); }
 
-        // EXTRACCIÓN DE HOST ROBUSTA POR REGEX (Compatibilidad Total)
         try {
             var hostMatch = window.location.search.match(/host=([^&]+)/);
             if (hostMatch) serverHome = hostMatch[1];
-        } catch(e) { log('No se pudo extraer host por Regex.'); }
+        } catch(e) {}
 
-        // DOBLE CABLEADO: Función Global
         window.acceptDisclaimer = function() {
-            log('--> Botón Pulsado (Trigger Global)');
             var el = document.getElementById('disclaimer');
             if (el) {
                 el.style.opacity = '0';
@@ -121,32 +129,10 @@
             }
         };
 
-        // SEGUNDO CABLEADO: Escuchador por Script
-        try {
-            document.getElementById('acceptBtn').addEventListener('click', window.acceptDisclaimer);
-        } catch(e) { log('Fallo en addEventListener.'); }
-
-        function formatHM(s) {
-            if (s === undefined || s === null || isNaN(s)) return '0h 0m';
-            var abs = Math.abs(s);
-            return Math.floor(abs/3600) + 'h ' + Math.floor((abs%3600)/60) + 'm';
-        }
-
-        function getStatusInfo(act) {
-            act = (act || '').toUpperCase();
-            if (act.includes('DRIVING')) return { label: 'CONDUCCIÓN', color: '#22c55e', text: 'white' };
-            if (act.includes('REST'))    return { label: 'DESCANSO', color: '#3b82f6', text: 'white' };
-            if (act.includes('WORK'))    return { label: 'OTROS TRABAJOS', color: '#f97316', text: 'white' };
-            if (act.includes('AVAIL'))   return { label: 'DISPONIBILIDAD', color: '#eab308', text: 'white' };
-            return { label: act || 'MODO SELECT', color: '#cbd5e1', text: '#334155' };
-        }
-
         function geotabDriveAddInInit(a, s, c) {
             api = a; state = s;
             log('Iniciando SDK...');
-            
             setTimeout(function() {
-                if (state.driver && state.driver.id) cachedDriverId = state.driver.id;
                 if (state.device && state.device.id) {
                     api.call('Get', { typeName: 'Device', search: { id: state.device.id } }, function(d) {
                         if (d && d.length > 0) document.getElementById('vehicleName').textContent = d[0].name;
@@ -158,19 +144,21 @@
         }
 
         function startEngine() {
-            log('Motor Primario (SDK)...');
+            log('--> Get (SDK)...');
             api.call('Get', { typeName: 'TachographDrivingTimeStatus' }, function(res) {
+                log('SDK Result: ' + (res ? res.length : 0));
                 if (res && res.length > 0) {
-                    var targetId = (state.driver && state.driver.id) ? state.driver.id : cachedDriverId;
-                    render(res.find(i => i.user && i.user.id === targetId) || res[0]);
+                    var targetId = (state.driver && state.driver.id) ? state.driver.id : null;
+                    var d = res.find(i => i.user && i.user.id === targetId) || res[0];
+                    render(d);
                 } else { tryJailbreak(); }
-            }, function(err) { tryJailbreak(); });
+            }, function(err) { log('SDK Error', err); tryJailbreak(); });
         }
 
         function tryJailbreak() {
             api.getSession(function(session) {
                 var sid = session ? (session.sessionId || session.sessionID) : null;
-                if (!sid) { showNoData('Falla de sesión de Geotab.'); return; }
+                if (!sid) { showNoData('Falla de sesión.'); return; }
                 if (session.server) serverHome = session.server;
                 
                 fetch('https://' + serverHome + '/apiv1', {
@@ -179,14 +167,13 @@
                         credentials: { database: session.database, sessionId: sid, userName: session.userName }
                     }, id: 1 }), headers: { 'Content-Type': 'application/json' }
                 }).then(r => r.json()).then(d => {
-                    if (d.result && d.result.length > 0) {
-                        var targetId = (state.driver && state.driver.id) ? state.driver.id : cachedDriverId;
-                        render(d.result.find(i => i.user && i.user.id === targetId) || d.result[0]);
+                    var items = d.result || [];
+                    log('Fetch Result: ' + items.length);
+                    if (items.length > 0) {
+                        var targetId = (state.driver && state.driver.id) ? state.driver.id : null;
+                        render(items.find(i => i.user && i.user.id === targetId) || items[0]);
                     } else { showNoData(); }
-                }).catch(e => {
-                    log('Fallo de red.', e);
-                    showError('Error de servidor Geotab.');
-                });
+                }).catch(e => { log('Fetch Error', e); showError('Error de red.'); });
             });
         }
 
@@ -196,46 +183,43 @@
             document.getElementById('dashboard').style.display = 'block';
             if (!d) return;
 
-            var info = getStatusInfo(d.activityStatus);
+            var act = (d.activityStatus || '').toUpperCase();
             var badge = document.getElementById('currentActivityBadge');
-            badge.textContent = info.label;
-            badge.style.backgroundColor = info.color;
-            badge.style.color = info.text;
+            if (act.includes('DRIVING')) { badge.textContent = 'CONDUCCIÓN'; badge.style.backgroundColor = '#22c55e'; badge.style.color='white'; }
+            else if (act.includes('REST')) { badge.textContent = 'DESCANSO'; badge.style.backgroundColor = '#3b82f6'; badge.style.color='white'; }
+            else if (act.includes('WORK')) { badge.textContent = 'TRABAJO'; badge.style.backgroundColor = '#f97316'; badge.style.color='white'; }
+            else { badge.textContent = 'DISPONIBLE'; badge.style.backgroundColor = '#eab308'; badge.style.color='white'; }
 
             document.getElementById('extendedDaysLeft').textContent = Math.max(0, 2 - (d.dailyDrivingLongDayCount || 0));
             document.getElementById('reducedRestsLeft').textContent = Math.max(0, 3 - (d.weeklyPeriodReducedRestCount || 0));
 
-            var cardC = document.getElementById('cardCompensar');
-            if ((d.pendingCompensations || 0) > 0) {
-                cardC.style.display = 'block';
-                document.getElementById('compensationAmt').textContent = formatHM(d.nextCompensationDuration || 0);
-            } else { cardC.style.display = 'none'; }
-
             var cSec = d.continuousDrivingTime || 0;
-            document.getElementById('continuousDrivingTxt').textContent = formatHM(cSec);
+            document.getElementById('continuousDrivingTxt').textContent = Math.floor(cSec/3600) + 'h ' + Math.floor((cSec%3600)/60) + 'm';
             document.getElementById('continuousBar').style.width = Math.min((cSec/16200)*100, 100) + '%';
             
-            var dailyT = d.dailyDrivingTime || 0;
-            var dailyL = d.dailyDrivingTimeLimit || 32400;
-            document.getElementById('dailyDrivingTxt').textContent = formatHM(dailyT);
-            document.getElementById('dailyLimitTxt').textContent = '/ ' + formatHM(dailyL);
-            document.getElementById('dailyBar').style.width = Math.min((dailyT/dailyL)*100, 100) + '%';
+            var dTime = d.dailyDrivingTime || 0;
+            document.getElementById('dailyDrivingTxt').textContent = Math.floor(dTime/3600) + 'h ' + Math.floor((dTime%3600)/60) + 'm';
+            document.getElementById('dailyBar').style.width = Math.min((dTime/32400)*100, 100) + '%';
 
-            var isR = info.label === 'DESCANSO';
+            var isR = act.includes('REST');
             var rAcc = isR ? (d.restDuration || 0) : 0;
-            var rReq = (d.dailyDrivingRestMinType || '').includes('Reduced') ? 32400 : 39600;
-            document.getElementById('restAccumulatedTxt').textContent = formatHM(rAcc);
-            document.getElementById('restRequiredTxt').textContent = '/ ' + formatHM(rReq);
-            document.getElementById('restBar').style.width = Math.min((rAcc/rReq)*100, 100) + '%';
+            document.getElementById('restAccumulatedTxt').textContent = Math.floor(rAcc/3600) + 'h ' + Math.floor((rAcc%3600)/60) + 'm';
+            document.getElementById('restBar').style.width = Math.min((rAcc/32400)*100, 100) + '%';
         }
 
-        function showNoData(msg) {
+        function showNoData(msgOverride) {
             document.getElementById('loading').style.display = 'none';
             document.getElementById('dashboard').style.display = 'none';
             document.getElementById('errorView').style.display = 'block';
             document.getElementById('errorMessage').textContent = 'Esperando Datos';
             document.getElementById('errorMessage').style.color = '#3b82f6';
-            document.getElementById('errorSub').textContent = msg || 'Conectado a Geotab. Esperando que el tacógrafo envíe actividad hoy.';
+            document.getElementById('errorSub').textContent = msgOverride || 'Conectado. No hay actividad de tacógrafo hoy para este conductor.';
+            
+            // Llenar panel diagnóstico
+            document.getElementById('diagPanel').style.display = 'block';
+            document.getElementById('diagDriver').textContent = (state.driver && state.driver.id) ? state.driver.id : 'N/A';
+            document.getElementById('diagVehicle').textContent = document.getElementById('vehicleName').textContent;
+            document.getElementById('diagServer').textContent = serverHome;
         }
 
         function showError(m) {
@@ -244,13 +228,10 @@
             document.getElementById('errorView').style.display = 'block';
             document.getElementById('errorMessage').textContent = m;
             document.getElementById('errorMessage').style.color = '#ef4444';
-            document.getElementById('errorSub').textContent = 'Error de conexión. Reintenta o reinicia.';
         }
 
         window.geotabDriveAddInInit = geotabDriveAddInInit;
-        geotab.addin.tacho_drive_pro = function () {
-            return { initialize: geotabDriveAddInInit, focus: startEngine };
-        };
+        geotab.addin.tacho_drive_pro = function () { return { initialize: geotabDriveAddInInit, focus: startEngine }; };
     </script>
 </body>
 </html>
