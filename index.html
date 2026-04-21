@@ -399,10 +399,11 @@
     </div>
 
     <script>
-        console.log("%c !!! TACHO CUSTOM ADDIN LOADED - v2.0.2 !!!", "background: #222; color: #bada55; font-size: 20px;");
+        console.log("%c !!! TACHO CUSTOM ADDIN LOADED - v2.0.3 !!!", "background: #222; color: #bada55; font-size: 20px;");
 
         var api;
         var state;
+        var retryCount = 0;
 
         var CONT_DRIVING_MAX_SEC  = 4.5 * 3600;
         var DAILY_NORMAL_MAX_SEC  = 9   * 3600;
@@ -421,7 +422,18 @@
         function geotabDriveAddInInit(apiObj, stateObj, callback) {
             api   = apiObj;
             state = stateObj;
-            log('Inicializado. Driver:', state.driver ? state.driver.id : 'N/A');
+            
+            console.log("FULL STATE OBJECT:", state);
+            log('Inicialización detectada. Verificando conductor...');
+
+            if (!state.driver && retryCount < 5) {
+                retryCount++;
+                log('Conductor no encontrado en el estado. Reintentando en 2s... (Intento ' + retryCount + ')');
+                setTimeout(function() {
+                    geotabDriveAddInInit(api, state, callback);
+                }, 2000);
+                return;
+            }
 
             document.getElementById('loading').style.display  = 'flex';
             document.getElementById('dashboard').style.display = 'none';
@@ -602,7 +614,7 @@
             var bPct = Math.min((biweeklySec / BIWEEKLY_MAX_SEC) * 100, 100);
             var bBar = document.getElementById('biweeklyBar');
             bBar.style.width = bPct + '%';
-            bBar.className   = 'progress ' + (bPct > 90 ? 'fill-red' : 'fill-orange');
+            bBar.className   = 'progress ' + (bPct > 90 ? 'fill-red' : bPct > 75 ? 'fill-yellow' : 'fill-orange');
         }
 
         function showError(msg) {
@@ -613,32 +625,52 @@
         }
 
         function checkTachographStatus() {
-            log('Comprobando estado del tacógrafo...');
+            log('Iniciando consulta de datos...');
             document.getElementById('loading').style.display    = 'flex';
             document.getElementById('errorView').style.display  = 'none';
 
-            if (!api || !state || !state.driver) {
-                showError('Sesión del conductor no disponible. Asegúrate de estar autenticado en Drive.');
+            if (!api || !state) {
+                showError('API o Estado no inicializados correctamente.');
+                return;
+            }
+
+            // Intentamos recuperar el driver ID de varias formas
+            var driverId = (state.driver && state.driver.id);
+            
+            if (!driverId && api.getSession) {
+                var session = api.getSession();
+                driverId = session.userName; // En algunos contextos de Drive el ID es el userName
+                log('Recuperando ID desde getSession:', driverId);
+            }
+
+            if (!driverId) {
+                showError('No se ha podido identificar al conductor. Reintenta en unos segundos.');
                 return;
             }
 
             api.call('Get', { typeName: 'TachographDrivingTimeStatus', search: {} })
             .then(function(results) {
+                log('Resultados de API recibidos:', results ? results.length : 0);
                 if (!results || results.length === 0) {
-                    showError('No hay datos de tacógrafo disponibles. Comprueba que la tarjeta está insertada.');
+                    showError('No hay datos de tacógrafo disponibles en este momento.');
                     return;
                 }
-                var myId   = state.driver.id;
-                var myData = results.find(function(r) { return r.user && r.user.id === myId; });
+                var myData = results.find(function(r) { return r.user && (r.user.id === driverId || r.user.name === driverId); });
                 if (!myData) {
-                    showError('No se encontraron datos para este conductor (' + myId + ').');
-                    return;
+                    // Si no lo encuentra por ID estricto, cogemos el primero para pruebas si solo hay uno
+                    if (results.length === 1) {
+                        log('ID no coincide exactamente, usando el único registro disponible.');
+                        myData = results[0];
+                    } else {
+                        showError('No se encontraron datos para el conductor ' + driverId);
+                        return;
+                    }
                 }
                 renderData(myData);
             })
             .catch(function(err) {
                 log('Error API', err);
-                showError('Error al consultar la API: ' + (err.message || err));
+                showError('Error al conectar con Geotab: ' + (err.message || err));
             });
         }
 
@@ -654,9 +686,7 @@
                 },
                 focus: function (api, state) {
                     console.log("!!! TACHO CUSTOM FOCUS !!!");
-                    if (typeof checkTachographStatus === 'function') {
-                        checkTachographStatus();
-                    }
+                    checkTachographStatus();
                 },
                 blur: function (api, state) {
                     console.log("!!! TACHO CUSTOM BLUR !!!");
