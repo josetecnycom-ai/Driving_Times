@@ -1,7 +1,7 @@
 {
-    "name": "Z_TachoCustom_v9",
+    "name": "Tacho_Final_V2",
     "supportEmail": "soporte@tecnoflotas.com",
-    "version": "1.0.3",
+    "version": "2.0.2",
     "items": [
         {
             "url": "https://josetecnycom-ai.github.io/Driving_Times/index.html",
@@ -9,10 +9,12 @@
             "weight": -100,
             "icon": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj4KICA8ZyBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSI2IiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPgogICAgPGNpcmNsZSBjeD0iNTAiIGN5PSI1MCIgcj0iMzIiLz4KICAgIDxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjEwIi8+CiAgICA8cGF0aCBkPSJNNDMgNTcgTDMwIDcwIi8+CiAgICA8cGF0aCBkPSJNNTcgNTcgTDcwIDcwIi8+CiAgPC9nPgo8L3N2Zz4=",
             "menuName": {
-                "en": "Z Custom Tacho",
-                "es": "Z Tacho Test"
+                "en": "Tacho Drive",
+                "es": "Tacho Drive"
             }
         }
     ],
+    "isDriveAddin": true,
+    "onStartup": true,
     "isSigned": false
 }
