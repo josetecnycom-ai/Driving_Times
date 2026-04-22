@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tacho v2.4.0 (Resilience Port)</title>
+    <title>Tacho v2.4.3 (v2.2.8 Base)</title>
 </head>
 <body id="mainBody" style="margin:0; padding:10px; background-color:#f1f5f9; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; color:#0f172a; transition: background 0.5s ease;">
 
@@ -22,7 +22,7 @@
     <!-- Error View -->
     <div id="errorView" style="display:none; padding:20px; text-align:center; background:white; border-radius:16px; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
         <h2 id="errorMessage" style="color:#3b82f6;">Sin Conexión</h2>
-        <p id="errorSub" style="font-size:14px; color:#64748b;">No hay datos almacenados ni conexión con el servidor.</p>
+        <p id="errorSub" style="font-size:14px; color:#64748b;">No hay datos guardados disponibles. Espere a que el vehículo sincronice.</p>
         <button onclick="location.reload()" style="margin-top:20px; padding:10px 20px; background:#3b82f6; color:white; border:none; border-radius:8px; font-weight:700;">Reintentar</button>
     </div>
 
@@ -40,7 +40,7 @@
                 <div id="currentActivityBadge" style="padding:6px 12px; border-radius:8px; font-weight:800; font-size:11px; text-transform:uppercase; background:#cbd5e1; color:#334155;">---</div>
             </div>
 
-            <!-- Fila de Availability -->
+            <!-- Fila de Availability - Diseño v2.2.8 -->
             <div id="availRow" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:10px;">
                 <div style="background:white; border-radius:14px; padding:12px 10px; border-left:5px solid #22c55e; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
                     <h4 style="font-size:10px; color:#64748b; text-transform:uppercase; margin:0; font-weight:700;">Jornadas 10h</h4>
@@ -55,21 +55,18 @@
                 <div id="cardCompensar" style="background:#fff5f5; border-radius:14px; padding:12px 10px; border-left:5px solid #ef4444; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
                     <h4 style="font-size:10px; color:#ef4444; text-transform:uppercase; margin:0; font-weight:700;">Compensar</h4>
                     <div id="compensationAmt" style="font-size:24px; font-weight:900; margin:4px 0; color:#ef4444;">0h</div>
-                    <div id="compensationDeadline" style="font-size:9px; color:#ef4444; font-weight:500;">sin deudas</div>
                 </div>
             </div>
 
-            <!-- Tarjetas de Conducción -->
+            <!-- Tarjetas de Conducción - Diseño v2.2.8 -->
             <div class="card" style="background:white; border-radius:16px; padding:16px; box-shadow:0 4px 12px rgba(0,0,0,0.06); margin-bottom:10px;">
                 <h3 style="font-size:12px; color:#64748b; text-transform:uppercase; margin:0 0 10px 0; font-weight:700; letter-spacing:0.04em;">Conducción Continua</h3>
                 <div style="display:flex; align-items:baseline; gap:6px; margin-bottom:10px;">
                     <span id="continuousDrivingTxt" style="font-size:32px; font-weight:900; color:#0f172a;">0h 0m</span>
                     <span style="font-size:15px; color:#64748b; font-weight:500;">/ 4h 30m</span>
                 </div>
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <div style="flex-grow:1; height:12px; background:#e2e8f0; border-radius:6px; overflow:hidden;">
-                        <div id="continuousBar" style="height:100%; width:0%; background:#22c55e; border-radius:6px; transition:width 0.5s;"></div>
-                    </div>
+                <div style="flex-grow:1; height:12px; background:#e2e8f0; border-radius:6px; overflow:hidden;">
+                    <div id="continuousBar" style="height:100%; width:0%; background:#22c55e; border-radius:6px; transition:width 0.5s;"></div>
                 </div>
             </div>
 
@@ -79,12 +76,10 @@
                     <span id="dailyDrivingTxt" style="font-size:32px; font-weight:900; color:#0f172a;">0h 0m</span>
                     <span id="dailyLimitTxt" style="font-size:15px; color:#64748b; font-weight:500;">/ 9h 0m</span>
                 </div>
-                <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
-                    <div style="flex-grow:1; height:12px; background:#e2e8f0; border-radius:6px; overflow:hidden;">
-                        <div id="dailyBar" style="height:100%; width:0%; background:#22c55e; border-radius:6px; transition:width 0.5s;"></div>
-                    </div>
+                <div style="flex-grow:1; height:12px; background:#e2e8f0; border-radius:6px; overflow:hidden;">
+                    <div id="dailyBar" style="height:100%; width:0%; background:#22c55e; border-radius:6px; transition:width 0.5s;"></div>
                 </div>
-                <div style="display:flex; justify-content:space-between; font-size:13px; color:#64748b;">
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:#64748b; margin-top:8px;">
                     <span>Inicio jornada:</span>
                     <strong id="startShiftTxt" style="color:#0f172a; font-weight:800;">--:--</strong>
                 </div>
@@ -96,14 +91,12 @@
                     <span id="restAccumulatedTxt" style="font-size:32px; font-weight:900; color:#0f172a;">0h 0m</span>
                     <span id="restRequiredTxt" style="font-size:15px; color:#64748b; font-weight:500;">/ 11h 0m</span>
                 </div>
-                <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
-                    <div style="flex-grow:1; height:12px; background:#e2e8f0; border-radius:6px; overflow:hidden;">
-                        <div id="restBar" style="height:100%; width:0%; background:#3b82f6; border-radius:6px; transition:width 0.5s;"></div>
-                    </div>
+                <div style="flex-grow:1; height:12px; background:#e2e8f0; border-radius:6px; overflow:hidden;">
+                    <div id="restBar" style="height:100%; width:0%; background:#3b82f6; border-radius:6px; transition:width 0.5s;"></div>
                 </div>
             </div>
 
-            <!-- Acumulados -->
+            <!-- ACUMULADOS ORIGINALES v2.2.8 -->
             <div class="card" style="background:white; border-radius:16px; padding:16px; box-shadow:0 4px 12px rgba(0,0,0,0.06); margin-bottom:10px;">
                 <h3 style="font-size:12px; color:#64748b; text-transform:uppercase; margin:0 0 12px 0; font-weight:700; letter-spacing:0.04em;">Acumulados</h3>
                 <div style="margin-bottom:15px;">
@@ -129,7 +122,7 @@
     </div>
 
     <script>
-        console.log("%c !!! Tacho v2.4.0 (Resilience Backup) !!! ", "background:#1e293b; color:#3b82f6; font-weight:bold; font-size:18px;");
+        console.log("%c !!! Tacho v2.4.3 - Restauración Backup + Resiliencia !!! ", "background:#1e293b; color:#3b82f6; font-weight:bold; font-size:18px;");
 
         var api, state, mainSession = null, cachedDriverId = null, refreshInterval, liveCounterInterval;
 
@@ -144,8 +137,7 @@
         function formatTime(v) {
             if (!v || v === 0) return '--:--';
             var d = (typeof v === 'number') ? new Date(v * 1000) : new Date(v);
-            var ts = d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-            return ts;
+            return d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
         }
 
         function getStatusInfo(act) {
@@ -161,58 +153,67 @@
             api = a; state = s;
             api.getSession(function(session) {
                 mainSession = session;
-                if (!mainSession.server) mainSession.server = 'my.geotab.com';
                 
-                cachedDriverId = (state.driver && state.driver.id && state.driver.id !== 'N/A') ? state.driver.id : (session.userId || null);
-                
-                if (state.device && state.device.id) {
-                    api.call('Get', { typeName: 'Device', search: { id: state.device.id } }, function(devs) {
-                        if (devs && devs.length > 0) {
-                            document.getElementById('vehicleName').textContent = devs[0].name;
-                            localStorage.setItem('tacho_last_vehicle_reserve', devs[0].name);
+                // MEJORA IDENTIDAD: Intentar buscar el ID en múltiples fuentes
+                var searchLoop = function(attempts) {
+                    var currentId = (state.driver && state.driver.id && state.driver.id !== 'N/A') ? state.driver.id : (mainSession.userId || mainSession.id);
+                    
+                    if (currentId && currentId !== 'undefined') {
+                        cachedDriverId = currentId;
+                        log('ID Identificado con éxito: ' + cachedDriverId);
+                        
+                        if (state.device && state.device.id) {
+                            api.call('Get', { typeName: 'Device', search: { id: state.device.id } }, function(devs) {
+                                if (devs && devs.length > 0) {
+                                    document.getElementById('vehicleName').textContent = devs[0].name;
+                                    localStorage.setItem('tacho_last_vehicle_reserve', devs[0].name);
+                                }
+                            });
                         }
-                    });
-                }
-                checkStatus();
-                if (refreshInterval) clearInterval(refreshInterval);
-                refreshInterval = setInterval(checkStatus, 30000);
+                        checkStatus();
+                        if (refreshInterval) clearInterval(refreshInterval);
+                        refreshInterval = setInterval(checkStatus, 30000);
+                    } else if (attempts > 0) {
+                        log('Esperando ID del conductor... reintentando en 1s');
+                        setTimeout(function() { searchLoop(attempts - 1); }, 1000);
+                    } else {
+                        log('No se pudo identificar ID tras varios intentos. Usando sesión base.');
+                        cachedDriverId = mainSession.userId || mainSession.userName;
+                        checkStatus();
+                    }
+                };
+                searchLoop(5); // Intentar 5 veces
             });
             if (c) c();
         }
 
         function checkStatus() {
-            api.getSession(function(session) {
-                mainSession = session;
-                if (!cachedDriverId) {
-                    cachedDriverId = (state.driver && state.driver.id && state.driver.id !== 'N/A') ? state.driver.id : session.userId;
+            if (!cachedDriverId || cachedDriverId === 'undefined') {
+                log('Sincronización abortada: ID indefinido.');
+                loadFromCache();
+                return;
+            }
+            
+            var searchObj = {
+                typeName: "TachographDrivingTimeStatusSearch",
+                userSearch: { id: cachedDriverId }
+            };
+
+            log('Consultando Geotab para: ' + cachedDriverId);
+            api.call('Get', {
+                typeName: 'TachographDrivingTimeStatus',
+                search: searchObj
+            }, function(res) {
+                if (res && res.length > 0) { render(res[0], false); }
+                else { 
+                    // Búsqueda global como último recurso SDK
+                    api.call('Get', { typeName: 'TachographDrivingTimeStatus', search: {} }, function(list) {
+                        var mine = list.find(function(x) { return x.driver && x.driver.id === cachedDriverId; });
+                        if (mine) render(mine, false);
+                        else tryJailbreak(searchObj);
+                    }, function() { tryJailbreak(searchObj); });
                 }
-                log('Sincronizando con ID: ' + cachedDriverId);
-
-                // Versión simplificada que funcionó antes
-                var searchObj = cachedDriverId ? { userSearch: { id: cachedDriverId } } : {};
-
-                api.call('Get', {
-                    typeName: 'TachographDrivingTimeStatus',
-                    search: searchObj
-                }, function(res) {
-                    if (res && res.length > 0) {
-                        render(res[0], false);
-                    } else {
-                        // Respaldo final: Buscar en lista global si la específica falla
-                        log('No se encontró por ID, buscando en lista global...');
-                        api.call('Get', { typeName: 'TachographDrivingTimeStatus', search: {} }, function(list) {
-                            var mine = list.find(function(x) { 
-                                return x.driver && (x.driver.id === cachedDriverId); 
-                            });
-                            if (mine) render(mine, false);
-                            else tryJailbreak(searchObj);
-                        }, function() { tryJailbreak(searchObj); });
-                    }
-                }, function(err) {
-                    log('Error SDK, intentando Jailbreak...');
-                    tryJailbreak(searchObj);
-                });
-            });
+            }, function(err) { tryJailbreak(searchObj); });
         }
 
         function tryJailbreak(searchObj) {
@@ -241,14 +242,16 @@
         }
 
         function loadFromCache() {
-            log('Modo Resiliencia: Cargando datos guardados...');
+            log('Cargando memoria local...');
             var cached = localStorage.getItem('tacho_cache_reserve_' + cachedDriverId);
             var lastVehicle = localStorage.getItem('tacho_last_vehicle_reserve');
-            if (cached) {
+            if (cached && cached !== 'undefined') {
                 if (lastVehicle) document.getElementById('vehicleName').textContent = lastVehicle;
                 render(JSON.parse(cached), true);
             } else {
-                showNoData();
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'none';
+                document.getElementById('errorView').style.display = 'block';
             }
         }
 
@@ -289,13 +292,6 @@
             document.getElementById('extendedDaysLeft').textContent = Math.max(0, 2 - (d.dailyDrivingLongDayCount || 0));
             document.getElementById('reducedRestsLeft').textContent = Math.max(0, 3 - (d.weeklyPeriodReducedRestCount || 0));
 
-            var cardC = document.getElementById('cardCompensar');
-            if ((d.pendingCompensations || 0) > 0) {
-                cardC.style.display = 'block';
-                document.getElementById('compensationAmt').textContent = formatHM(d.nextCompensationDuration || 0);
-            } else { cardC.style.display = 'none'; }
-
-            // Tiempos
             var cSec = d.continuousDrivingTime || 0;
             document.getElementById('continuousDrivingTxt').textContent = formatHM(cSec);
             document.getElementById('continuousBar').style.width = Math.min((cSec/16200)*100, 100) + '%';
@@ -305,12 +301,10 @@
             document.getElementById('dailyBar').style.width = Math.min((dSec/32400)*100, 100) + '%';
             document.getElementById('startShiftTxt').textContent = formatTime(d.activeDailyDrivingStart);
 
-            // Contador de Descanso Dinámico
+            // Descanso Dinámico
             if (liveCounterInterval) clearInterval(liveCounterInterval);
             var baseRest = d.restDuration || 0;
-            var isResting = info.label === 'DESCANSO';
-            
-            if (isResting && isStale) {
+            if ((info.label === 'DESCANSO') && isStale) {
                 var lastTs = parseInt(localStorage.getItem('tacho_ts_reserve_' + cachedDriverId) || Date.now());
                 var updateCounter = function() {
                     var elapsed = (Date.now() - lastTs) / 1000;
@@ -325,7 +319,7 @@
                 document.getElementById('restBar').style.width = Math.min((baseRest/32400)*100, 100) + '%';
             }
 
-            // Acumulados
+            // Acumulados v2.2.8
             var wSec = d.cumulatedWeeklyDrivingTime || 0;
             document.getElementById('weeklyTxt').textContent = formatHM(wSec);
             document.getElementById('weeklyBar').style.width = Math.min((wSec / 201600) * 100, 100) + '%';
@@ -333,13 +327,6 @@
             var bSec = d.cumulatedBiweeklyDrivingTime || 0;
             document.getElementById('biweeklyTxt').textContent = formatHM(bSec);
             document.getElementById('biweeklyBar').style.width = Math.min((bSec / 324000) * 100, 100) + '%';
-        }
-
-        function showNoData() {
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('dashboard').style.display = 'none';
-            document.getElementById('errorView').style.display = 'block';
-            document.getElementById('errorSub').textContent = 'No hay datos guardados. Espere a sincronizar con el vehículo.';
         }
 
         window.geotabDriveAddInInit = geotabDriveAddInInit;
