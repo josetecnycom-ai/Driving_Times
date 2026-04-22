@@ -111,13 +111,17 @@
                     <span id="restAccumulatedTxt" style="font-size:32px; font-weight:900; color:#0f172a;">0h 0m</span>
                     <span style="font-size:15px; color:#64748b; font-weight:500;">/ <span id="restLimitLabel">11h 0m</span></span>
                 </div>
-                <div style="display:flex; align-items:center; gap:10px;">
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
                     <div style="flex-grow:1; height:12px; background:#e2e8f0; border-radius:6px; overflow:hidden;">
                         <div id="restBar" style="height:100%; width:0%; background:#3b82f6; border-radius:6px; transition:width 0.5s;"></div>
                     </div>
                     <div id="restDisp" class="disp-label">--:-- rest.</div>
                 </div>
-                <div id="restAdvice" class="advice-box" style="display:none;">Límite 24h para finalizar: <strong id="limit24hTxt" style="color:#ef4444;">--:--</strong></div>
+                <!-- Linea Limite 24h corregida -->
+                <div id="restAdvice" style="display:none; justify-content:space-between; font-size:13px; color:#64748b; padding-bottom:10px; border-bottom:1px solid #f1f5f9; margin-bottom:10px;">
+                    <span>Límite 24h para finalizar:</span>
+                    <strong id="limit24hTxt" style="color:#ef4444; font-weight:800;">Hoy --:--</strong>
+                </div>
                 <div id="restBadge" class="badge badge-green" style="display:none;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
                     Puede usar descanso reducido (9h)
@@ -390,12 +394,19 @@
                 if (document.getElementById('restDisp')) document.getElementById('restDisp').textContent = formatHM(rLimit - rSec) + ' rest.';
                 if (document.getElementById('restBadge')) document.getElementById('restBadge').style.display = redRestsVal > 0 ? 'flex' : 'none';
                 
-                // Límite 24h (Simple estimation: StartShift + 24h)
+                // Límite 24h (Cálculo exacto: (Inicio + 24h) - Descanso Requerido)
                 if (d.activeDailyDrivingStart) {
                     var startTs = (typeof d.activeDailyDrivingStart === 'number') ? d.activeDailyDrivingStart : (new Date(d.activeDailyDrivingStart).getTime() / 1000);
-                    var limitTs = startTs + 86400;
-                    if (document.getElementById('limit24hTxt')) document.getElementById('limit24hTxt').textContent = formatTime(limitTs);
-                    if (document.getElementById('restAdvice')) document.getElementById('restAdvice').style.display = 'block';
+                    var deadlineStartRestTs = (startTs + 86400) - rLimit; // El límite para EMPEZAR el descanso
+                    
+                    var dateDeadline = new Date(deadlineStartRestTs * 1000);
+                    var now = new Date();
+                    var dayLabel = (dateDeadline.getDate() !== now.getDate()) ? 'Mañana ' : 'Hoy ';
+                    var hours = dateDeadline.getHours().toString().padStart(2, '0');
+                    var minutes = dateDeadline.getMinutes().toString().padStart(2, '0');
+                    
+                    if (document.getElementById('limit24hTxt')) document.getElementById('limit24hTxt').textContent = dayLabel + hours + ':' + minutes;
+                    if (document.getElementById('restAdvice')) document.getElementById('restAdvice').style.display = 'flex';
                 }
 
                 // Descanso Dinámico
