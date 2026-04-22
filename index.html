@@ -149,41 +149,64 @@
             return { label: act || 'DESCONOCIDO', color: '#cbd5e1', text: '#334155' };
         }
 
+        function resolveIdentityAndStart(session) {
+            mainSession = session;
+            var email = session.userName;
+            
+            // 1. Intentar ID del estado del dispositivo (Lo más fiable en Drive)
+            if (state.driver && state.driver.id && state.driver.id !== 'N/A' && state.driver.id.startsWith('b')) {
+                cachedDriverId = state.driver.id;
+                log('ID detectado por estado: ' + cachedDriverId);
+                finalizeInit();
+                return;
+            }
+
+            // 2. Intentar ID de la sesión
+            if (session.userId && session.userId.startsWith('b')) {
+                cachedDriverId = session.userId;
+                log('ID detectado por sesión: ' + cachedDriverId);
+                finalizeInit();
+                return;
+            }
+
+            // 3. TRADUCTOR: Si solo tenemos el email, buscamos el ID interno
+            log('Buscando ID interno para el usuario: ' + email);
+            api.call('Get', {
+                typeName: 'User',
+                search: { name: email }
+            }, function(users) {
+                if (users && users.length > 0) {
+                    cachedDriverId = users[0].id;
+                    log('ID resuelto desde el servidor: ' + cachedDriverId);
+                } else {
+                    log('No se pudo resolver ID. Usando email como último recurso (podría fallar).');
+                    cachedDriverId = email;
+                }
+                finalizeInit();
+            }, function() {
+                log('Error al consultar usuario. Usando email.');
+                cachedDriverId = email;
+                finalizeInit();
+            });
+        }
+
+        function finalizeInit() {
+            if (state.device && state.device.id) {
+                api.call('Get', { typeName: 'Device', search: { id: state.device.id } }, function(devs) {
+                    if (devs && devs.length > 0) {
+                        document.getElementById('vehicleName').textContent = devs[0].name;
+                        localStorage.setItem('tacho_last_vehicle_reserve', devs[0].name);
+                    }
+                });
+            }
+            checkStatus();
+            if (refreshInterval) clearInterval(refreshInterval);
+            refreshInterval = setInterval(checkStatus, 30000);
+        }
+
         function geotabDriveAddInInit(a, s, c) {
             api = a; state = s;
-            api.getSession(function(session) {
-                mainSession = session;
-                
-                // MEJORA IDENTIDAD: Intentar buscar el ID en múltiples fuentes
-                var searchLoop = function(attempts) {
-                    var currentId = (state.driver && state.driver.id && state.driver.id !== 'N/A') ? state.driver.id : (mainSession.userId || mainSession.id);
-                    
-                    if (currentId && currentId !== 'undefined') {
-                        cachedDriverId = currentId;
-                        log('ID Identificado con éxito: ' + cachedDriverId);
-                        
-                        if (state.device && state.device.id) {
-                            api.call('Get', { typeName: 'Device', search: { id: state.device.id } }, function(devs) {
-                                if (devs && devs.length > 0) {
-                                    document.getElementById('vehicleName').textContent = devs[0].name;
-                                    localStorage.setItem('tacho_last_vehicle_reserve', devs[0].name);
-                                }
-                            });
-                        }
-                        checkStatus();
-                        if (refreshInterval) clearInterval(refreshInterval);
-                        refreshInterval = setInterval(checkStatus, 30000);
-                    } else if (attempts > 0) {
-                        log('Esperando ID del conductor... reintentando en 1s');
-                        setTimeout(function() { searchLoop(attempts - 1); }, 1000);
-                    } else {
-                        log('No se pudo identificar ID tras varios intentos. Usando sesión base.');
-                        cachedDriverId = mainSession.userId || mainSession.userName;
-                        checkStatus();
-                    }
-                };
-                searchLoop(5); // Intentar 5 veces
-            });
+            api.getSession(resolveIdentityAndStart);
             if (c) c();
         }
 
