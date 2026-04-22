@@ -17,7 +17,15 @@
         <div style="width:40px; height:40px; border:4px solid #cbd5e1; border-top-color:#3b82f6; border-radius:50%; animation:spin 1s linear infinite;"></div>
         <p style="margin-top:15px; font-weight:700; color:#64748b;">Sincronizando...</p>
     </div>
-    <style>@keyframes spin { to { transform: rotate(360deg); } } .stale-mode { filter: saturate(0.2); opacity: 0.85; }</style>
+    <style>
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .stale-mode { filter: saturate(0.2); opacity: 0.85; }
+        .disp-label { font-size: 11px; font-weight: 700; color: #64748b; white-space: nowrap; }
+        .badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 800; margin-top: 10px; border: 1px solid rgba(0,0,0,0.05); }
+        .badge-blue { background: #eff6ff; color: #2563eb; }
+        .badge-green { background: #f0fdf4; color: #16a34a; }
+        .advice-box { margin-top: 10px; font-size: 12px; color: #64748b; padding-top: 10px; border-top: 1px solid #f1f5f9; }
+    </style>
 
     <!-- Error View -->
     <div id="errorView" style="display:none; padding:20px; text-align:center; background:white; border-radius:16px; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
@@ -55,6 +63,7 @@
                 <div id="cardCompensar" style="background:#fff5f5; border-radius:14px; padding:12px 10px; border-left:5px solid #ef4444; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
                     <h4 style="font-size:10px; color:#ef4444; text-transform:uppercase; margin:0; font-weight:700;">Compensar</h4>
                     <div id="compensationAmt" style="font-size:24px; font-weight:900; margin:4px 0; color:#ef4444;">0h</div>
+                    <div style="font-size:10px; color:#ef4444;">sin deudas</div>
                 </div>
             </div>
 
@@ -65,23 +74,34 @@
                     <span id="continuousDrivingTxt" style="font-size:32px; font-weight:900; color:#0f172a;">0h 0m</span>
                     <span style="font-size:15px; color:#64748b; font-weight:500;">/ 4h 30m</span>
                 </div>
-                <div style="flex-grow:1; height:12px; background:#e2e8f0; border-radius:6px; overflow:hidden;">
-                    <div id="continuousBar" style="height:100%; width:0%; background:#22c55e; border-radius:6px; transition:width 0.5s;"></div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="flex-grow:1; height:12px; background:#e2e8f0; border-radius:6px; overflow:hidden;">
+                        <div id="continuousBar" style="height:100%; width:0%; background:#22c55e; border-radius:6px; transition:width 0.5s;"></div>
+                    </div>
+                    <div id="continuousDisp" class="disp-label">--:-- disp.</div>
                 </div>
+                <div id="continuousAdvice" class="advice-box" style="display:none;">Pausar 45 min al llegar al límite</div>
             </div>
 
             <div class="card" style="background:white; border-radius:16px; padding:16px; box-shadow:0 4px 12px rgba(0,0,0,0.06); margin-bottom:10px;">
                 <h3 style="font-size:12px; color:#64748b; text-transform:uppercase; margin:0 0 10px 0; font-weight:700; letter-spacing:0.04em;">Conducción Diaria</h3>
                 <div style="display:flex; align-items:baseline; gap:6px; margin-bottom:10px;">
                     <span id="dailyDrivingTxt" style="font-size:32px; font-weight:900; color:#0f172a;">0h 0m</span>
-                    <span id="dailyLimitTxt" style="font-size:15px; color:#64748b; font-weight:500;">/ 9h 0m</span>
+                    <span style="font-size:15px; color:#64748b; font-weight:500;">/ <span id="dailyLimitLabel">9h 0m</span></span>
                 </div>
-                <div style="flex-grow:1; height:12px; background:#e2e8f0; border-radius:6px; overflow:hidden;">
-                    <div id="dailyBar" style="height:100%; width:0%; background:#22c55e; border-radius:6px; transition:width 0.5s;"></div>
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+                    <div style="flex-grow:1; height:12px; background:#e2e8f0; border-radius:6px; overflow:hidden;">
+                        <div id="dailyBar" style="height:100%; width:0%; background:#22c55e; border-radius:6px; transition:width 0.5s;"></div>
+                    </div>
+                    <div id="dailyDisp" class="disp-label">--:-- disp.</div>
                 </div>
-                <div style="display:flex; justify-content:space-between; font-size:13px; color:#64748b; margin-top:8px;">
+                <div style="display:flex; justify-content:space-between; font-size:13px; color:#64748b;">
                     <span>Inicio jornada:</span>
                     <strong id="startShiftTxt" style="color:#0f172a; font-weight:800;">--:--</strong>
+                </div>
+                <div id="dailyBadge" class="badge badge-blue" style="display:none;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                    Jornada ampliable hasta 10h
                 </div>
             </div>
 
@@ -89,14 +109,22 @@
                 <h3 style="font-size:12px; color:#64748b; text-transform:uppercase; margin:0 0 10px 0; font-weight:700; letter-spacing:0.04em;">Descanso del Día</h3>
                 <div style="display:flex; align-items:baseline; gap:6px; margin-bottom:10px;">
                     <span id="restAccumulatedTxt" style="font-size:32px; font-weight:900; color:#0f172a;">0h 0m</span>
-                    <span id="restRequiredTxt" style="font-size:15px; color:#64748b; font-weight:500;">/ 11h 0m</span>
+                    <span style="font-size:15px; color:#64748b; font-weight:500;">/ <span id="restLimitLabel">11h 0m</span></span>
                 </div>
-                <div style="flex-grow:1; height:12px; background:#e2e8f0; border-radius:6px; overflow:hidden;">
-                    <div id="restBar" style="height:100%; width:0%; background:#3b82f6; border-radius:6px; transition:width 0.5s;"></div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="flex-grow:1; height:12px; background:#e2e8f0; border-radius:6px; overflow:hidden;">
+                        <div id="restBar" style="height:100%; width:0%; background:#3b82f6; border-radius:6px; transition:width 0.5s;"></div>
+                    </div>
+                    <div id="restDisp" class="disp-label">--:-- rest.</div>
+                </div>
+                <div id="restAdvice" class="advice-box" style="display:none;">Límite 24h para finalizar: <strong id="limit24hTxt" style="color:#ef4444;">--:--</strong></div>
+                <div id="restBadge" class="badge badge-green" style="display:none;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                    Puede usar descanso reducido (9h)
                 </div>
             </div>
 
-            <!-- ACUMULADOS ORIGINALES v2.2.8 -->
+            <!-- Acumulados v2.2.8 -->
             <div class="card" style="background:white; border-radius:16px; padding:16px; box-shadow:0 4px 12px rgba(0,0,0,0.06); margin-bottom:10px;">
                 <h3 style="font-size:12px; color:#64748b; text-transform:uppercase; margin:0 0 12px 0; font-weight:700; letter-spacing:0.04em;">Acumulados</h3>
                 <div style="margin-bottom:15px;">
@@ -106,6 +134,7 @@
                         <div style="flex-grow:1; height:8px; background:#e2e8f0; border-radius:4px; overflow:hidden;">
                             <div id="weeklyBar" style="height:100%; width:0%; background:#eab308; border-radius:4px;"></div>
                         </div>
+                        <div id="weeklyDisp" class="disp-label">--:-- disp.</div>
                     </div>
                 </div>
                 <div>
@@ -115,6 +144,7 @@
                         <div style="flex-grow:1; height:8px; background:#e2e8f0; border-radius:4px; overflow:hidden;">
                             <div id="biweeklyBar" style="height:100%; width:0%; background:#f97316; border-radius:4px;"></div>
                         </div>
+                        <div id="biweeklyDisp" class="disp-label">--:-- disp.</div>
                     </div>
                 </div>
             </div>
@@ -328,32 +358,52 @@
                     badge.style.color = 'white';
                 }
 
-                var extDays = document.getElementById('extendedDaysLeft');
-                if (extDays) extDays.textContent = Math.max(0, 2 - (d.dailyDrivingLongDayCount || 0));
-                
-                var redRests = document.getElementById('reducedRestsLeft');
-                if (redRests) redRests.textContent = Math.max(0, 3 - (d.weeklyPeriodReducedRestCount || 0));
+                // Jornadas y Descansos disponibles
+                var extDaysVal = Math.max(0, 2 - (d.dailyDrivingLongDayCount || 0));
+                var redRestsVal = Math.max(0, 3 - (d.weeklyPeriodReducedRestCount || 0));
+                if (document.getElementById('extendedDaysLeft')) document.getElementById('extendedDaysLeft').textContent = extDaysVal;
+                if (document.getElementById('reducedRestsLeft')) document.getElementById('reducedRestsLeft').textContent = redRestsVal;
 
-                var contTxt = document.getElementById('continuousDrivingTxt');
-                if (contTxt) contTxt.textContent = formatHM(d.continuousDrivingTime || 0);
+                // Conducción Continua
+                var cSec = d.continuousDrivingTime || 0;
+                if (document.getElementById('continuousDrivingTxt')) document.getElementById('continuousDrivingTxt').textContent = formatHM(cSec);
+                if (document.getElementById('continuousBar')) document.getElementById('continuousBar').style.width = Math.min((cSec/16200)*100, 100) + '%';
+                if (document.getElementById('continuousDisp')) document.getElementById('continuousDisp').textContent = formatHM(16200 - cSec) + ' disp.';
+                if (document.getElementById('continuousAdvice')) document.getElementById('continuousAdvice').style.display = cSec > 0 ? 'block' : 'none';
+
+                // Conducción Diaria
+                var dSec = d.dailyDrivingTime || 0;
+                var dLimit = (dSec > 32400 || extDaysVal === 0) ? 36000 : 32400; // 10h o 9h
+                if (document.getElementById('dailyDrivingTxt')) document.getElementById('dailyDrivingTxt').textContent = formatHM(dSec);
+                if (document.getElementById('dailyLimitLabel')) document.getElementById('dailyLimitLabel').textContent = (dLimit/3600) + 'h 0m';
+                if (document.getElementById('dailyBar')) document.getElementById('dailyBar').style.width = Math.min((dSec/dLimit)*100, 100) + '%';
+                if (document.getElementById('dailyDisp')) document.getElementById('dailyDisp').textContent = formatHM(dLimit - dSec) + ' disp.';
+                if (document.getElementById('dailyBadge')) document.getElementById('dailyBadge').style.display = extDaysVal > 0 ? 'flex' : 'none';
+                if (document.getElementById('startShiftTxt')) document.getElementById('startShiftTxt').textContent = formatTime(d.activeDailyDrivingStart);
+
+                // Descanso Diario
+                var rSec = d.restDuration || 0;
+                var rLimit = (redRestsVal > 0) ? 32400 : 39600; // 9h o 11h
+                if (document.getElementById('restAccumulatedTxt')) document.getElementById('restAccumulatedTxt').textContent = formatHM(rSec);
+                if (document.getElementById('restLimitLabel')) document.getElementById('restLimitLabel').textContent = formatHM(rLimit);
+                if (document.getElementById('restBar')) document.getElementById('restBar').style.width = Math.min((rSec/rLimit)*100, 100) + '%';
+                if (document.getElementById('restDisp')) document.getElementById('restDisp').textContent = formatHM(rLimit - rSec) + ' rest.';
+                if (document.getElementById('restBadge')) document.getElementById('restBadge').style.display = redRestsVal > 0 ? 'flex' : 'none';
                 
-                var contBar = document.getElementById('continuousBar');
-                if (contBar) contBar.style.width = Math.min(((d.continuousDrivingTime || 0)/16200)*100, 100) + '%';
-                
-                var dailyTxt = document.getElementById('dailyDrivingTxt');
-                if (dailyTxt) dailyTxt.textContent = formatHM(d.dailyDrivingTime || 0);
-                
-                var dailyBar = document.getElementById('dailyBar');
-                if (dailyBar) dailyBar.style.width = Math.min(((d.dailyDrivingTime || 0)/32400)*100, 100) + '%';
-                
-                var shiftTxt = document.getElementById('startShiftTxt');
-                if (shiftTxt) shiftTxt.textContent = formatTime(d.activeDailyDrivingStart);
+                // Límite 24h (Simple estimation: StartShift + 24h)
+                if (d.activeDailyDrivingStart) {
+                    var startTs = (typeof d.activeDailyDrivingStart === 'number') ? d.activeDailyDrivingStart : (new Date(d.activeDailyDrivingStart).getTime() / 1000);
+                    var limitTs = startTs + 86400;
+                    if (document.getElementById('limit24hTxt')) document.getElementById('limit24hTxt').textContent = formatTime(limitTs);
+                    if (document.getElementById('restAdvice')) document.getElementById('restAdvice').style.display = 'block';
+                }
 
                 // Descanso Dinámico
                 if (liveCounterInterval) clearInterval(liveCounterInterval);
                 var baseRest = d.restDuration || 0;
                 var rAccTxt = document.getElementById('restAccumulatedTxt');
                 var rBar = document.getElementById('restBar');
+                var rDisp = document.getElementById('restDisp');
 
                 if ((info.label === 'DESCANSO') && isStale) {
                     var lastTs = parseInt(localStorage.getItem('tacho_ts_reserve_' + cachedDriverId) || Date.now());
@@ -361,27 +411,23 @@
                         var elapsed = (Date.now() - lastTs) / 1000;
                         var totalRest = baseRest + elapsed;
                         if (rAccTxt) rAccTxt.textContent = formatHM(totalRest);
-                        if (rBar) rBar.style.width = Math.min((totalRest/32400)*100, 100) + '%';
+                        if (rBar) rBar.style.width = Math.min((totalRest/rLimit)*100, 100) + '%';
+                        if (rDisp) rDisp.textContent = formatHM(rLimit - totalRest) + ' rest.';
                     };
                     updateCounter();
                     liveCounterInterval = setInterval(updateCounter, 10000);
-                } else {
-                    if (rAccTxt) rAccTxt.textContent = formatHM(baseRest);
-                    if (rBar) rBar.style.width = Math.min((baseRest/32400)*100, 100) + '%';
                 }
 
                 // Acumulados v2.2.8
                 var wSec = d.cumulatedWeeklyDrivingTime || 0;
-                var wTxt = document.getElementById('weeklyTxt');
-                if (wTxt) wTxt.textContent = formatHM(wSec);
-                var wBar = document.getElementById('weeklyBar');
-                if (wBar) wBar.style.width = Math.min((wSec / 201600) * 100, 100) + '%';
+                if (document.getElementById('weeklyTxt')) document.getElementById('weeklyTxt').textContent = formatHM(wSec);
+                if (document.getElementById('weeklyBar')) document.getElementById('weeklyBar').style.width = Math.min((wSec / 201600) * 100, 100) + '%';
+                if (document.getElementById('weeklyDisp')) document.getElementById('weeklyDisp').textContent = formatHM(201600 - wSec) + ' disp.';
 
                 var bSec = d.cumulatedBiweeklyDrivingTime || 0;
-                var bTxt = document.getElementById('biweeklyTxt');
-                if (bTxt) bTxt.textContent = formatHM(bSec);
-                var bBar = document.getElementById('biweeklyBar');
-                if (bBar) bBar.style.width = Math.min((bSec / 324000) * 100, 100) + '%';
+                if (document.getElementById('biweeklyTxt')) document.getElementById('biweeklyTxt').textContent = formatHM(bSec);
+                if (document.getElementById('biweeklyBar')) document.getElementById('biweeklyBar').style.width = Math.min((bSec / 324000) * 100, 100) + '%';
+                if (document.getElementById('biweeklyDisp')) document.getElementById('biweeklyDisp').textContent = formatHM(324000 - bSec) + ' disp.';
                 
             } catch (err) {
                 console.error('[Tacho Critical] Error en renderizado:', err);
