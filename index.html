@@ -181,25 +181,37 @@
         }
 
         function checkStatus() {
-            log('Iniciando sincronización...');
             api.getSession(function(session) {
                 mainSession = session;
                 if (!cachedDriverId) {
                     cachedDriverId = (state.driver && state.driver.id && state.driver.id !== 'N/A') ? state.driver.id : session.userId;
                 }
+                log('Sincronizando con ID: ' + cachedDriverId);
 
-                var searchObj = {
-                    typeName: "TachographDrivingTimeStatusSearch",
-                    userSearch: cachedDriverId ? { id: cachedDriverId } : {}
-                };
+                // Versión simplificada que funcionó antes
+                var searchObj = cachedDriverId ? { userSearch: { id: cachedDriverId } } : {};
 
                 api.call('Get', {
                     typeName: 'TachographDrivingTimeStatus',
                     search: searchObj
                 }, function(res) {
-                    if (res && res.length > 0) { render(res[0], false); }
-                    else { tryJailbreak(searchObj); }
-                }, function(err) { tryJailbreak(searchObj); });
+                    if (res && res.length > 0) {
+                        render(res[0], false);
+                    } else {
+                        // Respaldo final: Buscar en lista global si la específica falla
+                        log('No se encontró por ID, buscando en lista global...');
+                        api.call('Get', { typeName: 'TachographDrivingTimeStatus', search: {} }, function(list) {
+                            var mine = list.find(function(x) { 
+                                return x.driver && (x.driver.id === cachedDriverId); 
+                            });
+                            if (mine) render(mine, false);
+                            else tryJailbreak(searchObj);
+                        }, function() { tryJailbreak(searchObj); });
+                    }
+                }, function(err) {
+                    log('Error SDK, intentando Jailbreak...');
+                    tryJailbreak(searchObj);
+                });
             });
         }
 
