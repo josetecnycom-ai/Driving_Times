@@ -288,77 +288,105 @@
         }
 
         function render(d, isStale) {
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('errorView').style.display = 'none';
-            document.getElementById('dashboard').style.display = 'block';
+            try {
+                if (!d) return;
+                log('Renderizando datos... (Stale: ' + isStale + ')');
 
-            var container = document.getElementById('uiContainer');
-            var banner = document.getElementById('resilienceBanner');
-            var body = document.getElementById('mainBody');
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('errorView').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
 
-            if (isStale) {
-                container.classList.add('stale-mode');
-                banner.style.display = 'block';
-                body.style.backgroundColor = '#e2e8f0';
-                var lastTs = localStorage.getItem('tacho_ts_reserve_' + cachedDriverId);
-                if (lastTs) {
-                    var date = new Date(parseInt(lastTs));
-                    document.getElementById('lastTimeTxt').textContent = date.getHours().toString().padStart(2, '0') + ':' + date.getMinutes().toString().padStart(2, '0');
+                var container = document.getElementById('uiContainer');
+                var banner = document.getElementById('resilienceBanner');
+                var body = document.getElementById('mainBody');
+
+                if (isStale) {
+                    if (container) container.classList.add('stale-mode');
+                    if (banner) banner.style.display = 'block';
+                    if (body) body.style.backgroundColor = '#e2e8f0';
+                    var lastTs = localStorage.getItem('tacho_ts_reserve_' + cachedDriverId);
+                    if (lastTs) {
+                        var date = new Date(parseInt(lastTs));
+                        var timeTxt = document.getElementById('lastTimeTxt');
+                        if (timeTxt) timeTxt.textContent = date.getHours().toString().padStart(2, '0') + ':' + date.getMinutes().toString().padStart(2, '0');
+                    }
+                } else {
+                    if (container) container.classList.remove('stale-mode');
+                    if (banner) banner.style.display = 'none';
+                    if (body) body.style.backgroundColor = '#f1f5f9';
+                    try {
+                        localStorage.setItem('tacho_cache_reserve_' + cachedDriverId, JSON.stringify(d));
+                        localStorage.setItem('tacho_ts_reserve_' + cachedDriverId, Date.now().toString());
+                    } catch(e) { log('Error guardando en caché'); }
                 }
-            } else {
-                container.classList.remove('stale-mode');
-                banner.style.display = 'none';
-                body.style.backgroundColor = '#f1f5f9';
-                localStorage.setItem('tacho_cache_reserve_' + cachedDriverId, JSON.stringify(d));
-                localStorage.setItem('tacho_ts_reserve_' + cachedDriverId, Date.now().toString());
+
+                var info = getStatusInfo(d.activityStatus || '');
+                var badge = document.getElementById('currentActivityBadge');
+                if (badge) {
+                    badge.textContent = info.label;
+                    badge.style.backgroundColor = isStale ? '#94a3b8' : info.color;
+                    badge.style.color = 'white';
+                }
+
+                var extDays = document.getElementById('extendedDaysLeft');
+                if (extDays) extDays.textContent = Math.max(0, 2 - (d.dailyDrivingLongDayCount || 0));
+                
+                var redRests = document.getElementById('reducedRestsLeft');
+                if (redRests) redRests.textContent = Math.max(0, 3 - (d.weeklyPeriodReducedRestCount || 0));
+
+                var contTxt = document.getElementById('continuousDrivingTxt');
+                if (contTxt) contTxt.textContent = formatHM(d.continuousDrivingTime || 0);
+                
+                var contBar = document.getElementById('continuousBar');
+                if (contBar) contBar.style.width = Math.min(((d.continuousDrivingTime || 0)/16200)*100, 100) + '%';
+                
+                var dailyTxt = document.getElementById('dailyDrivingTxt');
+                if (dailyTxt) dailyTxt.textContent = formatHM(d.dailyDrivingTime || 0);
+                
+                var dailyBar = document.getElementById('dailyBar');
+                if (dailyBar) dailyBar.style.width = Math.min(((d.dailyDrivingTime || 0)/32400)*100, 100) + '%';
+                
+                var shiftTxt = document.getElementById('startShiftTxt');
+                if (shiftTxt) shiftTxt.textContent = formatTime(d.activeDailyDrivingStart);
+
+                // Descanso Dinámico
+                if (liveCounterInterval) clearInterval(liveCounterInterval);
+                var baseRest = d.restDuration || 0;
+                var rAccTxt = document.getElementById('restAccumulatedTxt');
+                var rBar = document.getElementById('restBar');
+
+                if ((info.label === 'DESCANSO') && isStale) {
+                    var lastTs = parseInt(localStorage.getItem('tacho_ts_reserve_' + cachedDriverId) || Date.now());
+                    var updateCounter = function() {
+                        var elapsed = (Date.now() - lastTs) / 1000;
+                        var totalRest = baseRest + elapsed;
+                        if (rAccTxt) rAccTxt.textContent = formatHM(totalRest);
+                        if (rBar) rBar.style.width = Math.min((totalRest/32400)*100, 100) + '%';
+                    };
+                    updateCounter();
+                    liveCounterInterval = setInterval(updateCounter, 10000);
+                } else {
+                    if (rAccTxt) rAccTxt.textContent = formatHM(baseRest);
+                    if (rBar) rBar.style.width = Math.min((baseRest/32400)*100, 100) + '%';
+                }
+
+                // Acumulados v2.2.8
+                var wSec = d.cumulatedWeeklyDrivingTime || 0;
+                var wTxt = document.getElementById('weeklyTxt');
+                if (wTxt) wTxt.textContent = formatHM(wSec);
+                var wBar = document.getElementById('weeklyBar');
+                if (wBar) wBar.style.width = Math.min((wSec / 201600) * 100, 100) + '%';
+
+                var bSec = d.cumulatedBiweeklyDrivingTime || 0;
+                var bTxt = document.getElementById('biweeklyTxt');
+                if (bTxt) bTxt.textContent = formatHM(bSec);
+                var bBar = document.getElementById('biweeklyBar');
+                if (bBar) bBar.style.width = Math.min((bSec / 324000) * 100, 100) + '%';
+                
+            } catch (err) {
+                console.error('[Tacho Critical] Error en renderizado:', err);
+                log('Fallo crítico al dibujar datos: ' + err.message);
             }
-
-            if (!d) return;
-
-            var info = getStatusInfo(d.activityStatus);
-            var badge = document.getElementById('currentActivityBadge');
-            badge.textContent = info.label;
-            badge.style.backgroundColor = isStale ? '#94a3b8' : info.color;
-            badge.style.color = 'white';
-
-            document.getElementById('extendedDaysLeft').textContent = Math.max(0, 2 - (d.dailyDrivingLongDayCount || 0));
-            document.getElementById('reducedRestsLeft').textContent = Math.max(0, 3 - (d.weeklyPeriodReducedRestCount || 0));
-
-            var cSec = d.continuousDrivingTime || 0;
-            document.getElementById('continuousDrivingTxt').textContent = formatHM(cSec);
-            document.getElementById('continuousBar').style.width = Math.min((cSec/16200)*100, 100) + '%';
-            
-            var dSec = d.dailyDrivingTime || 0;
-            document.getElementById('dailyDrivingTxt').textContent = formatHM(dSec);
-            document.getElementById('dailyBar').style.width = Math.min((dSec/32400)*100, 100) + '%';
-            document.getElementById('startShiftTxt').textContent = formatTime(d.activeDailyDrivingStart);
-
-            // Descanso Dinámico
-            if (liveCounterInterval) clearInterval(liveCounterInterval);
-            var baseRest = d.restDuration || 0;
-            if ((info.label === 'DESCANSO') && isStale) {
-                var lastTs = parseInt(localStorage.getItem('tacho_ts_reserve_' + cachedDriverId) || Date.now());
-                var updateCounter = function() {
-                    var elapsed = (Date.now() - lastTs) / 1000;
-                    var totalRest = baseRest + elapsed;
-                    document.getElementById('restAccumulatedTxt').textContent = formatHM(totalRest);
-                    document.getElementById('restBar').style.width = Math.min((totalRest/32400)*100, 100) + '%';
-                };
-                updateCounter();
-                liveCounterInterval = setInterval(updateCounter, 10000);
-            } else {
-                document.getElementById('restAccumulatedTxt').textContent = formatHM(baseRest);
-                document.getElementById('restBar').style.width = Math.min((baseRest/32400)*100, 100) + '%';
-            }
-
-            // Acumulados v2.2.8
-            var wSec = d.cumulatedWeeklyDrivingTime || 0;
-            document.getElementById('weeklyTxt').textContent = formatHM(wSec);
-            document.getElementById('weeklyBar').style.width = Math.min((wSec / 201600) * 100, 100) + '%';
-
-            var bSec = d.cumulatedBiweeklyDrivingTime || 0;
-            document.getElementById('biweeklyTxt').textContent = formatHM(bSec);
-            document.getElementById('biweeklyBar').style.width = Math.min((bSec / 324000) * 100, 100) + '%';
         }
 
         window.geotabDriveAddInInit = geotabDriveAddInInit;
