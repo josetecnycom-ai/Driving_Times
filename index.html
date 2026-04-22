@@ -217,29 +217,33 @@
                 return;
             }
             
-            var searchObj = {
-                typeName: "TachographDrivingTimeStatusSearch",
-                userSearch: { id: cachedDriverId }
-            };
-
-            log('Consultando Geotab para: ' + cachedDriverId);
+            log('Consultando Geotab (Búsqueda Global)...');
             api.call('Get', {
                 typeName: 'TachographDrivingTimeStatus',
-                search: searchObj
+                search: {} // Pedimos todo para filtrar nosotros
             }, function(res) {
-                if (res && res.length > 0) { render(res[0], false); }
-                else { 
-                    // Búsqueda global como último recurso SDK
-                    api.call('Get', { typeName: 'TachographDrivingTimeStatus', search: {} }, function(list) {
-                        var mine = list.find(function(x) { return x.driver && x.driver.id === cachedDriverId; });
-                        if (mine) render(mine, false);
-                        else tryJailbreak(searchObj);
-                    }, function() { tryJailbreak(searchObj); });
+                log('Respuesta recibida. Objetos encontrados: ' + (res ? res.length : 0));
+                
+                var mine = null;
+                if (res && res.length > 0) {
+                    mine = res.find(function(x) { 
+                        return x.driver && (x.driver.id === cachedDriverId); 
+                    });
                 }
-            }, function(err) { tryJailbreak(searchObj); });
+
+                if (mine) {
+                    render(mine, false);
+                } else {
+                    log('No se encontraron datos para ' + cachedDriverId + ' en la lista global.');
+                    tryJailbreak();
+                }
+            }, function(err) { 
+                log('Error SDK, intentando Jailbreak...');
+                tryJailbreak(); 
+            });
         }
 
-        function tryJailbreak(searchObj) {
+        function tryJailbreak() {
             if (!mainSession) { loadFromCache(); return; }
             var rpc = {
                 method: "Get", params: {
@@ -249,7 +253,7 @@
                         sessionId: (mainSession.sessionId || mainSession.sessionID), 
                         userName: mainSession.userName 
                     },
-                    search: searchObj
+                    search: {}
                 }, id: 1
             };
             var server = mainSession.server || 'my.geotab.com';
@@ -258,8 +262,10 @@
             })
             .then(r => r.json())
             .then(d => {
-                if (d.result && d.result.length > 0) render(d.result[0], false);
-                else throw new Error('Empty');
+                var list = d.result || [];
+                var mine = list.find(function(x) { return x.driver && x.driver.id === cachedDriverId; });
+                if (mine) render(mine, false);
+                else throw new Error('Not found');
             })
             .catch(e => { loadFromCache(); });
         }
