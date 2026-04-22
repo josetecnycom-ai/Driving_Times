@@ -217,34 +217,31 @@
                 return;
             }
             
-            log('Consultando Geotab (Búsqueda Global)...');
+            // Búsqueda ultra-simple por ID (Formato compatible v2.3.x)
+            var searchObj = { userSearch: { id: cachedDriverId } };
+
+            log('Consultando Geotab para conductor: ' + cachedDriverId);
             api.call('Get', {
                 typeName: 'TachographDrivingTimeStatus',
-                search: {} // Pedimos todo para filtrar nosotros
+                search: searchObj
             }, function(res) {
-                log('Respuesta recibida. Objetos encontrados: ' + (res ? res.length : 0));
-                
-                var mine = null;
                 if (res && res.length > 0) {
-                    mine = res.find(function(x) { 
-                        return x.driver && (x.driver.id === cachedDriverId); 
-                    });
-                }
-
-                if (mine) {
-                    render(mine, false);
+                    log('Sincronización exitosa.');
+                    render(res[0], false);
                 } else {
-                    log('No se encontraron datos para ' + cachedDriverId + ' en la lista global.');
-                    tryJailbreak();
+                    log('El servidor devolvió una lista vacía para ' + cachedDriverId);
+                    tryJailbreak(searchObj);
                 }
             }, function(err) { 
-                log('Error SDK, intentando Jailbreak...');
-                tryJailbreak(); 
+                console.error('[Tacho Error] Detalle SDK:', err);
+                log('Error en SDK: ' + (err.message || 'Desconocido'));
+                tryJailbreak(searchObj); 
             });
         }
 
-        function tryJailbreak() {
+        function tryJailbreak(searchObj) {
             if (!mainSession) { loadFromCache(); return; }
+            log('Iniciando Jailbreak de red...');
             var rpc = {
                 method: "Get", params: {
                     typeName: "TachographDrivingTimeStatus",
@@ -253,7 +250,7 @@
                         sessionId: (mainSession.sessionId || mainSession.sessionID), 
                         userName: mainSession.userName 
                     },
-                    search: {}
+                    search: searchObj
                 }, id: 1
             };
             var server = mainSession.server || 'my.geotab.com';
@@ -262,12 +259,18 @@
             })
             .then(r => r.json())
             .then(d => {
-                var list = d.result || [];
-                var mine = list.find(function(x) { return x.driver && x.driver.id === cachedDriverId; });
-                if (mine) render(mine, false);
-                else throw new Error('Not found');
+                if (d.result && d.result.length > 0) {
+                    log('Jailbreak exitoso.');
+                    render(d.result[0], false);
+                } else {
+                    log('Jailbreak sin resultados.');
+                    throw new Error('Not found');
+                }
             })
-            .catch(e => { loadFromCache(); });
+            .catch(e => { 
+                log('Fallo total de conexión.');
+                loadFromCache(); 
+            });
         }
 
         function loadFromCache() {
