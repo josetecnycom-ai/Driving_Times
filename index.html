@@ -182,15 +182,42 @@
 
         function checkStatus() {
             log('Iniciando sincronización...');
+            api.getSession(function(session) {
+                mainSession = session;
+                if (!cachedDriverId) {
+                    cachedDriverId = (state.driver && state.driver.id && state.driver.id !== 'N/A') ? state.driver.id : session.userId;
+                }
+
+                var searchObj = {
+                    typeName: "TachographDrivingTimeStatusSearch",
+                    userSearch: cachedDriverId ? { id: cachedDriverId } : {}
+                };
+
+                api.call('Get', {
+                    typeName: 'TachographDrivingTimeStatus',
+                    search: searchObj
+                }, function(res) {
+                    if (res && res.length > 0) { render(res[0], false); }
+                    else { tryJailbreak(searchObj); }
+                }, function(err) { tryJailbreak(searchObj); });
+            });
+        }
+
+        function tryJailbreak(searchObj) {
+            if (!mainSession) { loadFromCache(); return; }
             var rpc = {
-                method: "Get",
-                params: {
+                method: "Get", params: {
                     typeName: "TachographDrivingTimeStatus",
-                    credentials: { database: mainSession.database, sessionId: mainSession.sessionId, userName: mainSession.userName },
-                    search: { userSearch: cachedDriverId ? { id: cachedDriverId } : undefined }
+                    credentials: { 
+                        database: mainSession.database, 
+                        sessionId: (mainSession.sessionId || mainSession.sessionID), 
+                        userName: mainSession.userName 
+                    },
+                    search: searchObj
                 }, id: 1
             };
-            fetch('https://' + mainSession.server + '/apiv1', {
+            var server = mainSession.server || 'my.geotab.com';
+            fetch('https://' + server + '/apiv1', {
                 method: 'POST', body: JSON.stringify(rpc), headers: { 'Content-Type': 'application/json' }
             })
             .then(r => r.json())
@@ -198,13 +225,7 @@
                 if (d.result && d.result.length > 0) render(d.result[0], false);
                 else throw new Error('Empty');
             })
-            .catch(e => {
-                // Fallback a SDK
-                api.call('Get', { typeName: 'TachographDrivingTimeStatus', search: { userSearch: cachedDriverId ? { id: cachedDriverId } : {} } }, function(res) {
-                    if (res && res.length > 0) render(res[0], false);
-                    else loadFromCache();
-                }, function() { loadFromCache(); });
-            });
+            .catch(e => { loadFromCache(); });
         }
 
         function loadFromCache() {
