@@ -370,18 +370,39 @@
 
                 // Conducción Continua
                 var cSec = d.continuousDrivingTime || 0;
+                var cLimit = 16200; // 4h 30m
                 if (document.getElementById('continuousDrivingTxt')) document.getElementById('continuousDrivingTxt').textContent = formatHM(cSec);
-                if (document.getElementById('continuousBar')) document.getElementById('continuousBar').style.width = Math.min((cSec/16200)*100, 100) + '%';
-                if (document.getElementById('continuousDisp')) document.getElementById('continuousDisp').textContent = formatHM(16200 - cSec) + ' disp.';
-                if (document.getElementById('continuousAdvice')) document.getElementById('continuousAdvice').style.display = cSec > 0 ? 'block' : 'none';
+                if (document.getElementById('continuousBar')) {
+                    document.getElementById('continuousBar').style.width = Math.min((cSec/cLimit)*100, 100) + '%';
+                    document.getElementById('continuousBar').style.backgroundColor = (cSec >= cLimit) ? '#ef4444' : '#22c55e';
+                }
+                if (document.getElementById('continuousDisp')) {
+                    var cDisp = document.getElementById('continuousDisp');
+                    if (cSec >= cLimit) {
+                        cDisp.innerHTML = '<span style="color:#ef4444;">' + formatHM(cSec - cLimit) + ' excedido</span>';
+                    } else {
+                        cDisp.innerHTML = '<span style="color:#64748b;">' + formatHM(cLimit - cSec) + ' disp.</span>';
+                    }
+                }
+                if (document.getElementById('continuousAdvice')) document.getElementById('continuousAdvice').style.display = (cSec > 0 && cSec < cLimit) ? 'block' : 'none';
 
                 // Conducción Diaria
                 var dSec = d.dailyDrivingTime || 0;
                 var dLimit = (dSec > 32400 || extDaysVal === 0) ? 36000 : 32400; // 10h o 9h
                 if (document.getElementById('dailyDrivingTxt')) document.getElementById('dailyDrivingTxt').textContent = formatHM(dSec);
                 if (document.getElementById('dailyLimitLabel')) document.getElementById('dailyLimitLabel').textContent = (dLimit/3600) + 'h 0m';
-                if (document.getElementById('dailyBar')) document.getElementById('dailyBar').style.width = Math.min((dSec/dLimit)*100, 100) + '%';
-                if (document.getElementById('dailyDisp')) document.getElementById('dailyDisp').textContent = formatHM(dLimit - dSec) + ' disp.';
+                if (document.getElementById('dailyBar')) {
+                    document.getElementById('dailyBar').style.width = Math.min((dSec/dLimit)*100, 100) + '%';
+                    document.getElementById('dailyBar').style.backgroundColor = (dSec >= dLimit) ? '#ef4444' : '#22c55e';
+                }
+                if (document.getElementById('dailyDisp')) {
+                    var dDisp = document.getElementById('dailyDisp');
+                    if (dSec >= dLimit) {
+                        dDisp.innerHTML = '<span style="color:#ef4444;">' + formatHM(dSec - dLimit) + ' excedido</span>';
+                    } else {
+                        dDisp.innerHTML = '<span style="color:#64748b;">' + formatHM(dLimit - dSec) + ' disp.</span>';
+                    }
+                }
                 if (document.getElementById('dailyBadge')) document.getElementById('dailyBadge').style.display = extDaysVal > 0 ? 'flex' : 'none';
                 if (document.getElementById('startShiftTxt')) document.getElementById('startShiftTxt').textContent = formatTime(d.activeDailyDrivingStart);
 
@@ -390,8 +411,18 @@
                 var rLimit = (redRestsVal > 0) ? 32400 : 39600; // 9h o 11h
                 if (document.getElementById('restAccumulatedTxt')) document.getElementById('restAccumulatedTxt').textContent = formatHM(rSec);
                 if (document.getElementById('restLimitLabel')) document.getElementById('restLimitLabel').textContent = formatHM(rLimit);
-                if (document.getElementById('restBar')) document.getElementById('restBar').style.width = Math.min((rSec/rLimit)*100, 100) + '%';
-                if (document.getElementById('restDisp')) document.getElementById('restDisp').textContent = formatHM(rLimit - rSec) + ' rest.';
+                if (document.getElementById('restBar')) {
+                    document.getElementById('restBar').style.width = Math.min((rSec/rLimit)*100, 100) + '%';
+                    document.getElementById('restBar').style.backgroundColor = (rSec >= rLimit) ? '#22c55e' : '#3b82f6';
+                }
+                if (document.getElementById('restDisp')) {
+                    var rDisp = document.getElementById('restDisp');
+                    if (rSec >= rLimit) {
+                        rDisp.innerHTML = '<span style="color:#22c55e;">Completado</span>';
+                    } else {
+                        rDisp.innerHTML = '<span style="color:#64748b;">' + formatHM(rLimit - rSec) + ' rest.</span>';
+                    }
+                }
                 if (document.getElementById('restBadge')) document.getElementById('restBadge').style.display = redRestsVal > 0 ? 'flex' : 'none';
                 
                 // Límite 24h (Cálculo exacto: (Inicio + 24h) - Descanso Requerido)
