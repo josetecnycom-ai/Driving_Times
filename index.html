@@ -50,20 +50,20 @@
 
             <!-- Fila de Availability - Diseño v2.2.8 -->
             <div id="availRow" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:10px;">
-                <div style="background:white; border-radius:14px; padding:12px 10px; border-left:5px solid #22c55e; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
-                    <h4 style="font-size:10px; color:#64748b; text-transform:uppercase; margin:0; font-weight:700;">Jornadas 10h</h4>
+                <div id="cardExtendedDays" style="background:white; border-radius:14px; padding:12px 10px; border-left:5px solid #22c55e; transition:all 0.3s; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+                    <h4 id="titleExtendedDays" style="font-size:10px; color:#64748b; text-transform:uppercase; margin:0; font-weight:700;">Jornadas 10h</h4>
                     <div id="extendedDaysLeft" style="font-size:24px; font-weight:900; margin:4px 0;">--</div>
-                    <div style="font-size:10px; color:#64748b;">disponibles</div>
+                    <div id="labelExtendedDays" style="font-size:10px; color:#64748b;">disponibles</div>
                 </div>
-                <div style="background:white; border-radius:14px; padding:12px 10px; border-left:5px solid #eab308; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
-                    <h4 style="font-size:10px; color:#64748b; text-transform:uppercase; margin:0; font-weight:700;">Descansos 9h</h4>
+                <div id="cardReducedRests" style="background:white; border-radius:14px; padding:12px 10px; border-left:5px solid #22c55e; transition:all 0.3s; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+                    <h4 id="titleReducedRests" style="font-size:10px; color:#64748b; text-transform:uppercase; margin:0; font-weight:700;">Descansos 9h</h4>
                     <div id="reducedRestsLeft" style="font-size:24px; font-weight:900; margin:4px 0;">--</div>
-                    <div style="font-size:10px; color:#64748b;">disponibles</div>
+                    <div id="labelReducedRests" style="font-size:10px; color:#64748b;">disponibles</div>
                 </div>
-                <div id="cardCompensar" style="background:#fff5f5; border-radius:14px; padding:12px 10px; border-left:5px solid #ef4444; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
-                    <h4 style="font-size:10px; color:#ef4444; text-transform:uppercase; margin:0; font-weight:700;">Compensar</h4>
-                    <div id="compensationAmt" style="font-size:24px; font-weight:900; margin:4px 0; color:#ef4444;">0h</div>
-                    <div style="font-size:10px; color:#ef4444;">sin deudas</div>
+                <div id="cardCompensar" style="background:#f0fdf4; border-radius:14px; padding:12px 10px; border-left:5px solid #22c55e; transition:all 0.3s; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+                    <h4 id="titleCompensar" style="font-size:10px; color:#16a34a; text-transform:uppercase; margin:0; font-weight:700;">Compensar</h4>
+                    <div id="compensationAmt" style="font-size:24px; font-weight:900; margin:4px 0; color:#16a34a;">0h</div>
+                    <div id="labelCompensar" style="font-size:10px; color:#16a34a;">sin deudas</div>
                 </div>
             </div>
 
@@ -365,8 +365,46 @@
                 // Jornadas y Descansos disponibles
                 var extDaysVal = Math.max(0, 2 - (d.dailyDrivingLongDayCount || 0));
                 var redRestsVal = Math.max(0, 3 - (d.weeklyPeriodReducedRestCount || 0));
-                if (document.getElementById('extendedDaysLeft')) document.getElementById('extendedDaysLeft').textContent = extDaysVal;
-                if (document.getElementById('reducedRestsLeft')) document.getElementById('reducedRestsLeft').textContent = redRestsVal;
+                
+                // Función auxiliar para aplicar colores a las tarjetas
+                var applyCardColor = function(cardId, state) {
+                    var card = document.getElementById('card' + cardId);
+                    var title = document.getElementById('title' + cardId);
+                    var valTxt = document.getElementById(cardId === 'ExtendedDays' ? 'extendedDaysLeft' : (cardId === 'ReducedRests' ? 'reducedRestsLeft' : 'compensationAmt'));
+                    var label = document.getElementById('label' + cardId);
+                    
+                    if (!card) return;
+                    
+                    var colors = {
+                        'green': { bg: '#f0fdf4', border: '#22c55e', text: '#16a34a' },
+                        'yellow': { bg: '#fefce8', border: '#eab308', text: '#ca8a04' },
+                        'red': { bg: '#fff5f5', border: '#ef4444', text: '#ef4444' }
+                    };
+                    var c = colors[state] || colors['green'];
+                    
+                    card.style.background = c.bg;
+                    card.style.borderLeftColor = c.border;
+                    if (title) title.style.color = c.text;
+                    if (valTxt) valTxt.style.color = c.text;
+                    if (label) label.style.color = c.text;
+                };
+
+                if (document.getElementById('extendedDaysLeft')) {
+                    document.getElementById('extendedDaysLeft').textContent = extDaysVal;
+                    applyCardColor('ExtendedDays', extDaysVal >= 2 ? 'green' : (extDaysVal === 1 ? 'yellow' : 'red'));
+                }
+                
+                if (document.getElementById('reducedRestsLeft')) {
+                    document.getElementById('reducedRestsLeft').textContent = redRestsVal;
+                    applyCardColor('ReducedRests', redRestsVal >= 3 ? 'green' : (redRestsVal > 0 ? 'yellow' : 'red'));
+                }
+
+                if (document.getElementById('compensationAmt')) {
+                    var compSec = 0; // TODO: En el futuro se puede conectar al campo de compensación de Geotab
+                    document.getElementById('compensationAmt').textContent = formatHM(compSec);
+                    document.getElementById('labelCompensar').textContent = compSec === 0 ? 'sin deudas' : 'pendientes';
+                    applyCardColor('Compensar', compSec === 0 ? 'green' : 'yellow');
+                }
 
                 // Conducción Continua
                 var cSec = d.continuousDrivingTime || 0;
