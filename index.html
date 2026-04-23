@@ -119,7 +119,7 @@
                 </div>
                 <!-- Linea Limite 24h corregida -->
                 <div id="restAdvice" style="display:none; justify-content:space-between; font-size:13px; color:#64748b; padding-bottom:10px; border-bottom:1px solid #f1f5f9; margin-bottom:10px;">
-                    <span>Límite 24h para finalizar:</span>
+                    <span id="restAdviceLabel">Límite 24h para finalizar:</span>
                     <strong id="limit24hTxt" style="color:#ef4444; font-weight:800;">Hoy --:--</strong>
                 </div>
                 <div id="restBadge" class="badge badge-green" style="display:none;">
@@ -463,19 +463,45 @@
                 }
                 if (document.getElementById('restBadge')) document.getElementById('restBadge').style.display = redRestsVal > 0 ? 'flex' : 'none';
                 
-                // Límite 24h (Cálculo exacto: (Inicio + 24h) - Descanso Requerido)
+                // Límite 24h o Fin de Descanso
                 if (d.activeDailyDrivingStart) {
-                    var startTs = (typeof d.activeDailyDrivingStart === 'number') ? d.activeDailyDrivingStart : (new Date(d.activeDailyDrivingStart).getTime() / 1000);
-                    var deadlineStartRestTs = (startTs + 86400) - rLimit; // El límite para EMPEZAR el descanso
+                    var isResting = (info.label === 'DESCANSO');
+                    var targetTs;
                     
-                    var dateDeadline = new Date(deadlineStartRestTs * 1000);
-                    var now = new Date();
-                    var dayLabel = (dateDeadline.getDate() !== now.getDate()) ? 'Mañana ' : 'Hoy ';
-                    var hours = dateDeadline.getHours().toString().padStart(2, '0');
-                    var minutes = dateDeadline.getMinutes().toString().padStart(2, '0');
+                    if (isResting) {
+                        // Calcula el fin absoluto del descanso usando el timestamp de referencia
+                        var dataTs = Date.now() / 1000;
+                        if (isStale) {
+                            var cachedTs = parseInt(localStorage.getItem('tacho_ts_reserve_' + cachedDriverId) || Date.now());
+                            dataTs = cachedTs / 1000;
+                        }
+                        var startOfRestTs = dataTs - rSec; // Instante en el que empezó el descanso
+                        targetTs = startOfRestTs + rLimit; // Instante en el que finalizará
+                    } else {
+                        // Límite para empezar a descansar (Inicio + 24h - Descanso Requerido)
+                        var startTs = (typeof d.activeDailyDrivingStart === 'number') ? d.activeDailyDrivingStart : (new Date(d.activeDailyDrivingStart).getTime() / 1000);
+                        targetTs = (startTs + 86400) - rLimit; 
+                    }
                     
-                    if (document.getElementById('limit24hTxt')) document.getElementById('limit24hTxt').textContent = dayLabel + hours + ':' + minutes;
-                    if (document.getElementById('restAdvice')) document.getElementById('restAdvice').style.display = 'flex';
+                    if (targetTs) {
+                        var dateTarget = new Date(targetTs * 1000);
+                        var now = new Date();
+                        var dayLabel = (dateTarget.getDate() !== now.getDate()) ? 'Mañana ' : 'Hoy ';
+                        var hours = dateTarget.getHours().toString().padStart(2, '0');
+                        var minutes = dateTarget.getMinutes().toString().padStart(2, '0');
+                        
+                        var txtEl = document.getElementById('limit24hTxt');
+                        var lblEl = document.getElementById('restAdviceLabel');
+                        
+                        if (txtEl) {
+                            txtEl.textContent = dayLabel + hours + ':' + minutes;
+                            txtEl.style.color = isResting ? '#16a34a' : '#ef4444';
+                        }
+                        if (lblEl) {
+                            lblEl.textContent = isResting ? 'Fin de descanso estimado:' : 'Límite 24h para finalizar:';
+                        }
+                        if (document.getElementById('restAdvice')) document.getElementById('restAdvice').style.display = 'flex';
+                    }
                 }
 
                 // Descanso Dinámico
