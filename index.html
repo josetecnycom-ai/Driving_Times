@@ -106,7 +106,7 @@
             </div>
 
             <div class="card" style="background:white; border-radius:16px; padding:16px; box-shadow:0 4px 12px rgba(0,0,0,0.06); margin-bottom:10px;">
-                <h3 style="font-size:12px; color:#64748b; text-transform:uppercase; margin:0 0 10px 0; font-weight:700; letter-spacing:0.04em;">Descanso del Día</h3>
+                <h3 id="restCardTitle" style="font-size:12px; color:#64748b; text-transform:uppercase; margin:0 0 10px 0; font-weight:700; letter-spacing:0.04em;">Descanso del Día</h3>
                 <div style="display:flex; align-items:baseline; gap:6px; margin-bottom:10px;">
                     <span id="restAccumulatedTxt" style="font-size:32px; font-weight:900; color:#0f172a;">0h 0m</span>
                     <span style="font-size:15px; color:#64748b; font-weight:500;">/ <span id="restLimitLabel">11h 0m</span></span>
@@ -444,11 +444,28 @@
                 if (document.getElementById('dailyBadge')) document.getElementById('dailyBadge').style.display = extDaysVal > 0 ? 'flex' : 'none';
                 if (document.getElementById('startShiftTxt')) document.getElementById('startShiftTxt').textContent = formatTime(d.activeDailyDrivingStart);
 
-                // Descanso Diario
+                // Descanso Diario y Semanal Dinámico
                 var rSec = d.restDuration || 0;
-                var rLimit = (redRestsVal > 0) ? 32400 : 39600; // 9h o 11h
+                var baseLimit = (redRestsVal > 0) ? 32400 : 39600; // 9h o 11h
+                var rLimit = baseLimit;
+                var restTitle = 'Descanso del Día';
+                var limitLabel = formatHM(baseLimit);
+
+                // Lógica de escalado a Descanso Semanal si supera las 15h
+                if (rSec >= 54000 && rSec < 86400) { // Entre 15h y 24h
+                    rLimit = 86400; // 24h
+                    limitLabel = '24h 0m';
+                    restTitle = 'Semanal (Reducido)';
+                } else if (rSec >= 86400) { // Más de 24h
+                    rLimit = 162000; // 45h
+                    limitLabel = '45h 0m';
+                    restTitle = 'Semanal (Normal)';
+                }
+
+                if (document.getElementById('restCardTitle')) document.getElementById('restCardTitle').textContent = restTitle;
                 if (document.getElementById('restAccumulatedTxt')) document.getElementById('restAccumulatedTxt').textContent = formatHM(rSec);
-                if (document.getElementById('restLimitLabel')) document.getElementById('restLimitLabel').textContent = formatHM(rLimit);
+                if (document.getElementById('restLimitLabel')) document.getElementById('restLimitLabel').textContent = limitLabel;
+                
                 if (document.getElementById('restBar')) {
                     document.getElementById('restBar').style.width = Math.min((rSec/rLimit)*100, 100) + '%';
                     document.getElementById('restBar').style.backgroundColor = (rSec >= rLimit) ? '#22c55e' : '#3b82f6';
@@ -461,7 +478,7 @@
                         rDisp.innerHTML = '<span style="color:#64748b;">' + formatHM(rLimit - rSec) + ' rest.</span>';
                     }
                 }
-                if (document.getElementById('restBadge')) document.getElementById('restBadge').style.display = redRestsVal > 0 ? 'flex' : 'none';
+                if (document.getElementById('restBadge')) document.getElementById('restBadge').style.display = (redRestsVal > 0 && rLimit === baseLimit) ? 'flex' : 'none';
                 
                 // Límite 24h o Fin de Descanso
                 if (d.activeDailyDrivingStart) {
@@ -469,16 +486,14 @@
                     var targetTs;
                     
                     if (isResting) {
-                        // Calcula el fin absoluto del descanso usando el timestamp de referencia
                         var dataTs = Date.now() / 1000;
                         if (isStale) {
                             var cachedTs = parseInt(localStorage.getItem('tacho_ts_reserve_' + cachedDriverId) || Date.now());
                             dataTs = cachedTs / 1000;
                         }
-                        var startOfRestTs = dataTs - rSec; // Instante en el que empezó el descanso
-                        targetTs = startOfRestTs + rLimit; // Instante en el que finalizará
+                        var startOfRestTs = dataTs - rSec;
+                        targetTs = startOfRestTs + rLimit; // Usa el rLimit dinámico (9h, 11h, 24h o 45h)
                     } else {
-                        // Límite para empezar a descansar (Inicio + 24h - Descanso Requerido)
                         var startTs = (typeof d.activeDailyDrivingStart === 'number') ? d.activeDailyDrivingStart : (new Date(d.activeDailyDrivingStart).getTime() / 1000);
                         targetTs = (startTs + 86400) - rLimit; 
                     }
@@ -487,6 +502,12 @@
                         var dateTarget = new Date(targetTs * 1000);
                         var now = new Date();
                         var dayLabel = (dateTarget.getDate() !== now.getDate()) ? 'Mañana ' : 'Hoy ';
+                        // Corrección de visualización para días lejanos (ej. descanso de 45h)
+                        if (dateTarget.getDate() - now.getDate() > 1 || (dateTarget.getDate() < now.getDate() && dateTarget.getMonth() !== now.getMonth())) {
+                            var daysOfWeek = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+                            dayLabel = daysOfWeek[dateTarget.getDay()] + ' ';
+                        }
+
                         var hours = dateTarget.getHours().toString().padStart(2, '0');
                         var minutes = dateTarget.getMinutes().toString().padStart(2, '0');
                         
@@ -504,21 +525,44 @@
                     }
                 }
 
-                // Descanso Dinámico
+                // Descanso Dinámico (Offline Counter)
                 if (liveCounterInterval) clearInterval(liveCounterInterval);
                 var baseRest = d.restDuration || 0;
                 var rAccTxt = document.getElementById('restAccumulatedTxt');
-                var rBar = document.getElementById('restBar');
-                var rDisp = document.getElementById('restDisp');
+                var rBarOffline = document.getElementById('restBar');
+                var rDispOffline = document.getElementById('restDisp');
 
                 if ((info.label === 'DESCANSO') && isStale) {
                     var lastTs = parseInt(localStorage.getItem('tacho_ts_reserve_' + cachedDriverId) || Date.now());
                     var updateCounter = function() {
                         var elapsed = (Date.now() - lastTs) / 1000;
                         var totalRest = baseRest + elapsed;
+                        
+                        // Re-evaluar escalado para el offline
+                        var dynLimit = baseLimit;
+                        var dynTitle = 'Descanso del Día';
+                        var dynLabel = formatHM(baseLimit);
+                        if (totalRest >= 54000 && totalRest < 86400) {
+                            dynLimit = 86400; dynTitle = 'Semanal (Reducido)'; dynLabel = '24h 0m';
+                        } else if (totalRest >= 86400) {
+                            dynLimit = 162000; dynTitle = 'Semanal (Normal)'; dynLabel = '45h 0m';
+                        }
+
+                        if (document.getElementById('restCardTitle')) document.getElementById('restCardTitle').textContent = dynTitle;
+                        if (document.getElementById('restLimitLabel')) document.getElementById('restLimitLabel').textContent = dynLabel;
                         if (rAccTxt) rAccTxt.textContent = formatHM(totalRest);
-                        if (rBar) rBar.style.width = Math.min((totalRest/rLimit)*100, 100) + '%';
-                        if (rDisp) rDisp.textContent = formatHM(rLimit - totalRest) + ' rest.';
+                        
+                        if (rBarOffline) {
+                            rBarOffline.style.width = Math.min((totalRest/dynLimit)*100, 100) + '%';
+                            rBarOffline.style.backgroundColor = (totalRest >= dynLimit) ? '#22c55e' : '#3b82f6';
+                        }
+                        if (rDispOffline) {
+                            if (totalRest >= dynLimit) {
+                                rDispOffline.innerHTML = '<span style="color:#22c55e;">Completado</span>';
+                            } else {
+                                rDispOffline.innerHTML = '<span style="color:#64748b;">' + formatHM(dynLimit - totalRest) + ' rest.</span>';
+                            }
+                        }
                     };
                     updateCounter();
                     liveCounterInterval = setInterval(updateCounter, 10000);
